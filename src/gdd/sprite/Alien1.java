@@ -46,6 +46,11 @@ public class Alien1 extends Enemy {
             initBomb(x, y);
         }
 
+        @Override
+        public void act() {
+
+        }
+
         private void initBomb(int x, int y) {
 
             setDestroyed(true);
