@@ -10,7 +10,10 @@ public class Player extends Sprite {
     private static final int START_X = 270;
     private static final int START_Y = 540;
     private int width;
-    private int currentSpeed = 2;
+    private int currentSpeed = 3;
+    public boolean rightPressed = false;
+    public boolean leftPressed = false;
+
 
     private Rectangle bounds = new Rectangle(175,135,17,32);
 
@@ -59,11 +62,13 @@ public class Player extends Sprite {
         int key = e.getKeyCode();
 
         if (key == KeyEvent.VK_LEFT) {
-            dx = -currentSpeed;
+            dx = -1 * currentSpeed;
+            leftPressed = true;
         }
 
         if (key == KeyEvent.VK_RIGHT) {
             dx = currentSpeed;
+            rightPressed = true;
         }
     }
 
@@ -71,11 +76,21 @@ public class Player extends Sprite {
         int key = e.getKeyCode();
 
         if (key == KeyEvent.VK_LEFT) {
-            dx = 0;
+            leftPressed = false;
+            if (rightPressed) {
+                dx = currentSpeed;
+            } else {
+                dx = 0;
+            }
         }
 
         if (key == KeyEvent.VK_RIGHT) {
-            dx = 0;
+            rightPressed = false;
+            if (leftPressed) {
+                dx = -1 * currentSpeed;
+            } else {
+                dx = 0;
+            }
         }
     }
 }
