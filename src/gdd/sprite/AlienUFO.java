@@ -21,7 +21,6 @@ public class AlienUFO extends Enemy {
 
     private int dy = 3;
 
-
     private final Rectangle[] flyingFrames = new Rectangle[] {
             new Rectangle(15, 33, 28, 29),
             new Rectangle(47, 33, 28, 29),
@@ -42,13 +41,13 @@ public class AlienUFO extends Enemy {
     };
 
     // private final Rectangle[] explosionFrames = new Rectangle[] {
-    //         new Rectangle(388, 173, 31, 24),
-    //         new Rectangle(328, 173, 31, 24),
-    //         new Rectangle(269, 172, 30, 25),
-    //         new Rectangle(207, 173, 32, 24),
-    //         new Rectangle(150, 171, 29, 26),
-    //         new Rectangle(90, 171, 29, 26),
-    //         new Rectangle(31, 169, 28, 29)
+    // new Rectangle(388, 173, 31, 24),
+    // new Rectangle(328, 173, 31, 24),
+    // new Rectangle(269, 172, 30, 25),
+    // new Rectangle(207, 173, 32, 24),
+    // new Rectangle(150, 171, 29, 26),
+    // new Rectangle(90, 171, 29, 26),
+    // new Rectangle(31, 169, 28, 29)
     // };
 
     private Rectangle currentFrame;
@@ -141,6 +140,16 @@ public class AlienUFO extends Enemy {
     }
 
     @Override
+    public int getWidth() {
+        return currentFrame != null ? currentFrame.width : super.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return currentFrame != null ? currentFrame.height : super.getHeight();
+    }
+
+    @Override
     public void act() {
         animationCounter++;
 
@@ -149,19 +158,18 @@ public class AlienUFO extends Enemy {
                 currentFrameIndex = (currentFrameIndex + 1) % flyingFrames.length;
                 currentFrame = flyingFrames[currentFrameIndex];
             }
-            //y += dy;
-        }// else if (ACT_EXPLOSION.equals(action)) {
-        //     if (animationCounter % ANIMATION_DELAY == 0) {
-        //         currentFrameIndex++;
-        //         if (currentFrameIndex >= explosionFrames.length) {
-        //             setVisible(false); // Remove UFO after explosion animation
-        //             currentFrame = null; // Avoid drawing invalid frames
-        //         } else {
-        //             currentFrame = explosionFrames[currentFrameIndex];
-        //         }
-        //     }
-        // }
+            // y += dy;
+        } // else if (ACT_EXPLOSION.equals(action)) {
+          // if (animationCounter % ANIMATION_DELAY == 0) {
+          // currentFrameIndex++;
+          // if (currentFrameIndex >= explosionFrames.length) {
+          // setVisible(false); // Remove UFO after explosion animation
+          // currentFrame = null; // Avoid drawing invalid frames
+          // } else {
+          // currentFrame = explosionFrames[currentFrameIndex];
+          // }
+          // }
+          // }
     }
 
-    
 }

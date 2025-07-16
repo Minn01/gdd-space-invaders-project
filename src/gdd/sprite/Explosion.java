@@ -12,27 +12,34 @@ import javax.swing.ImageIcon;
 public class Explosion extends Sprite {
     private BufferedImage spriteSheet;
 
-
-
     private int animationCounter = 0;
     private int currentFrameIndex = 0;
     private final int ANIMATION_DELAY = 2;
     private Rectangle currentFrame;
 
-    //private static final String ACT_FLYING = "FLYING";
+    // private static final String ACT_FLYING = "FLYING";
     private static final String ACT_EXPLOSION = "EXPLOSION";
     private String action = ACT_EXPLOSION;
 
     private final Rectangle[] explosionFrames = new Rectangle[] {
-        new Rectangle(388, 173, 31, 24),
-        new Rectangle(328, 173, 31, 24),
-        new Rectangle(269, 172, 30, 25),
-        new Rectangle(207, 173, 32, 24),
-        new Rectangle(150, 171, 29, 26),
-        new Rectangle(90, 171, 29, 26),
-        new Rectangle(31, 169, 28, 29)
-};
+            new Rectangle(388, 173, 31, 24),
+            new Rectangle(328, 173, 31, 24),
+            new Rectangle(269, 172, 30, 25),
+            new Rectangle(207, 173, 32, 24),
+            new Rectangle(150, 171, 29, 26),
+            new Rectangle(90, 171, 29, 26),
+            new Rectangle(31, 169, 28, 29)
+    };
 
+    @Override
+    public int getWidth() {
+        return currentFrame != null ? currentFrame.width : super.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return currentFrame != null ? currentFrame.height : super.getHeight();
+    }
 
     public Explosion(int x, int y) {
 
@@ -46,21 +53,22 @@ public class Explosion extends Sprite {
         ImageIcon ii = new ImageIcon(IMG_ALIEN_UFO);
         setImage(ii.getImage());
         currentFrame = explosionFrames[0];
-        //act();
+        // act();
 
         // var ii = new ImageIcon(IMG_EXPLOSION);
 
         // // Scale the image to use the global scaling factor
-        // var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() * SCALE_FACTOR,
-        //         ii.getIconHeight() * SCALE_FACTOR,
-        //         java.awt.Image.SCALE_SMOOTH);
+        // var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() *
+        // SCALE_FACTOR,
+        // ii.getIconHeight() * SCALE_FACTOR,
+        // java.awt.Image.SCALE_SMOOTH);
         // setImage(scaledImage);
     }
 
     @Override
     public Image getImage() {
         if (image == null || currentFrame == null) {
-            
+
             return image;
         }
         BufferedImage bImage = toBufferedImage(image);
@@ -85,13 +93,10 @@ public class Explosion extends Sprite {
         }
     }
 
-
-
     public void act(int direction) {
 
         // this.x += direction;
     }
-
 
     @Override
     public void act() {
@@ -100,7 +105,7 @@ public class Explosion extends Sprite {
             currentFrameIndex++;
             if (currentFrameIndex >= explosionFrames.length) {
                 setVisible(false);
-               
+
                 currentFrame = null; // Avoid drawing invalid frames
             } else {
                 currentFrame = explosionFrames[currentFrameIndex];
