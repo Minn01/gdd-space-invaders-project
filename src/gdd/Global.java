@@ -37,4 +37,8 @@ public class Global {
     public static final String IMG_POWERUP_SPEEDUP = "src/images/powerup-s.png";
     public static final String IMG_ALIEN_UFO = "src/images/alien_ufo.png";
 
+    // Stage timings in frame
+    public static final int STAGE_1_END = 18000;   // 5 minutes
+    public static final int STAGE_2_END = 36000;   // 10 minutes
+    public static final int STAGE_3_END = 54000; // 15 minutes
 }

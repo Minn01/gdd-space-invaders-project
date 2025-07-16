@@ -1,9 +1,9 @@
 package gdd.scene;
 
-import gdd.AudioPlayer;
-import gdd.Game;
+import gdd.*;
+
 import static gdd.Global.*;
-import gdd.SpawnDetails;
+
 import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
 import gdd.sprite.Alien1;
@@ -21,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -109,20 +110,61 @@ public class Scene1 extends JPanel {
     }
 
     private void loadSpawnDetails() {
-        // TODO load this from a file
-        spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
-        spawnMap.put(200, new SpawnDetails("AlienUFO", 200, 0));
-        spawnMap.put(300, new SpawnDetails("AlienUFO", 300, 0));
+//        // TODO load this from a file
+//        spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
+//        spawnMap.put(200, new SpawnDetails("AlienUFO", 200, 0));
+//        spawnMap.put(300, new SpawnDetails("AlienUFO", 300, 0));
+//
+//        spawnMap.put(400, new SpawnDetails("AlienUFO", 400, 0));
+//        spawnMap.put(401, new SpawnDetails("AlienUFO", 450, 0));
+//        spawnMap.put(402, new SpawnDetails("AlienUFO", 500, 0));
+//        spawnMap.put(403, new SpawnDetails("AlienUFO", 550, 0));
+//
+//        spawnMap.put(500, new SpawnDetails("AlienUFO", 100, 0));
+//        spawnMap.put(501, new SpawnDetails("AlienUFO", 150, 0));
+//        spawnMap.put(502, new SpawnDetails("AlienUFO", 200, 0));
+//        spawnMap.put(503, new SpawnDetails("AlienUFO", 350, 0));
+        try {
+            // Load from external file
+            spawnMap = SpawnDetailsLoader.loadFromCSV("src/gdd/spawns.csv");
+            System.out.println("Loaded " + spawnMap.size() + " spawn entries from CSV");
+        } catch (IOException e) {
+            System.err.println("Error loading spawn data from CSV: " + e.getMessage());
+        }
+    }
 
-        spawnMap.put(400, new SpawnDetails("AlienUFO", 400, 0));
-        spawnMap.put(401, new SpawnDetails("AlienUFO", 450, 0));
-        spawnMap.put(402, new SpawnDetails("AlienUFO", 500, 0));
-        spawnMap.put(403, new SpawnDetails("AlienUFO", 550, 0));
+    // function to spawn anything from spawn map
+    private void spawnEntity() {
+        // Check enemy spawn
+        SpawnDetails sd = spawnMap.get(frame);
+        if (sd != null) {
+            for (int i = 0; i < sd.getCount(); i++) {
+                int xPosition = sd.getX() + (sd.getSpacing() * i);
 
-        spawnMap.put(500, new SpawnDetails("AlienUFO", 100, 0));
-        spawnMap.put(501, new SpawnDetails("AlienUFO", 150, 0));
-        spawnMap.put(502, new SpawnDetails("AlienUFO", 200, 0));
-        spawnMap.put(503, new SpawnDetails("AlienUFO", 350, 0));
+                // Create a new enemy based on the spawn details
+                switch (sd.getType()) {
+                    case ALIEN_UFO: // rename this type to "AlienUFO" in your spawnMap too for clarity
+                        Enemy ufo = new AlienUFO(xPosition, sd.getY());
+                        enemies.add(ufo);
+                        System.out.println("Entity Spawned at frame: " + frame);
+                        break;
+                    // Add more cases for different enemy types if needed
+                    case ALIEN:
+                        // Enemy enemy2 = new Alien2(sd.x, sd.y);
+                        // enemies.add(enemy2);
+                        break;
+                    case SPEED_BOOST:
+                        // Handle speed up item spawn
+                        PowerUp speedUp = new SpeedUp(xPosition, sd.getY());
+                        powerups.add(speedUp);
+                        System.out.println("Entity Spawned at frame: " + frame);
+                        break;
+                    default:
+                        System.out.println("Unknown enemy type: " + sd.getType());
+                        break;
+                }
+            }
+        }
     }
 
     private void initBoard() {
@@ -375,34 +417,7 @@ public class Scene1 extends JPanel {
     }
 
     private void update() {
-
-        // Check enemy spawn
-        // TODO this approach can only spawn one enemy at a frame
-        SpawnDetails sd = spawnMap.get(frame);
-        if (sd != null) {
-            // Create a new enemy based on the spawn details
-            switch (sd.type) {
-                case "AlienUFO": // rename this type to "AlienUFO" in your spawnMap too for clarity
-                    Enemy ufo = new AlienUFO(sd.x, sd.y);
-                    enemies.add(ufo);
-
-                    break;
-
-                // Add more cases for different enemy types if needed
-                case "Alien2":
-                    // Enemy enemy2 = new Alien2(sd.x, sd.y);
-                    // enemies.add(enemy2);
-                    break;
-                case "PowerUp-SpeedUp":
-                    // Handle speed up item spawn
-                    PowerUp speedUp = new SpeedUp(sd.x, sd.y);
-                    powerups.add(speedUp);
-                    break;
-                default:
-                    System.out.println("Unknown enemy type: " + sd.type);
-                    break;
-            }
-        }
+        spawnEntity();
 
         if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
             inGame = false;
