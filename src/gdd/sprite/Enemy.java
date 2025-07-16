@@ -27,6 +27,7 @@ public class Enemy extends Sprite {
                 java.awt.Image.SCALE_SMOOTH);
         setImage(scaledImage);
     }
+   
 
     public void act(int direction) {
 

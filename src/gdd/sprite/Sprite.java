@@ -77,6 +77,7 @@ abstract public class Sprite {
 
     public void setDying(boolean dying) {
         this.dying = dying;
+    
     }
 
     public boolean isDying() {

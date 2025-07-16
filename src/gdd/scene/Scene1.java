@@ -241,10 +241,10 @@ public class Scene1 extends JPanel {
                 g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), this);
             }
 
-            // if (enemy.isDying()) {
+            if (enemy.isDying()) {
 
-            // enemy.die();
-            // }
+                enemy.die();
+            }
         }
     }
 
@@ -300,20 +300,21 @@ public class Scene1 extends JPanel {
 
     private void drawExplosions(Graphics g) {
 
-        List<Explosion> toRemove = new ArrayList<>();
+       // List<Explosion> toRemove = new ArrayList<>();
 
         for (Explosion explosion : explosions) {
 
             if (explosion.isVisible()) {
+                // explosion.act();
                 g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
-                explosion.visibleCountDown();
-                if (!explosion.isVisible()) {
-                    toRemove.add(explosion);
-                }
+                // explosion.visibleCountDown();
+                // if (!explosion.isVisible()) {
+                //     toRemove.add(explosion);
+                // }
             }
         }
 
-        explosions.removeAll(toRemove);
+        //explosions.removeAll(toRemove);
     }
 
     @Override
@@ -384,6 +385,7 @@ public class Scene1 extends JPanel {
                 case "AlienUFO": // rename this type to "AlienUFO" in your spawnMap too for clarity
                     Enemy ufo = new AlienUFO(sd.x, sd.y);
                     enemies.add(ufo);
+
                     break;
 
                 // Add more cases for different enemy types if needed
@@ -428,7 +430,16 @@ public class Scene1 extends JPanel {
             }
         }
 
-      
+        // explosion
+
+        List<Explosion> explosionsToRemove = new ArrayList<>();
+        for (Explosion explosion : explosions) {
+            explosion.act(); // Advance animation frame
+            if (!explosion.isVisible()) {
+                explosionsToRemove.add(explosion);
+            }
+        }
+        explosions.removeAll(explosionsToRemove);
 
         // shot
         List<Shot> shotsToRemove = new ArrayList<>();
@@ -454,10 +465,11 @@ public class Scene1 extends JPanel {
 
                         // var ii = new ImageIcon(IMG_EXPLOSION);
                         // enemy.setImage(ii.getImage());
-                        
-                        enemy.setDying(true);
+
                         explosions.add(new Explosion(enemyX, enemyY));
+
                         deaths++;
+                        enemy.setDying(true);
                         shot.die();
                         shotsToRemove.add(shot);
                     }
