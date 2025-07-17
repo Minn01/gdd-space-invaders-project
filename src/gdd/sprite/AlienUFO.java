@@ -37,7 +37,7 @@ public class AlienUFO extends Enemy {
             new Rectangle(399, 33, 28, 28),
             new Rectangle(430, 33, 29, 28),
             new Rectangle(463, 33, 28, 28),
-            new Rectangle(495, 33, 28, 29)
+            new Rectangle(495, 33, 28, 29),
     };
 
     // private final Rectangle[] explosionFrames = new Rectangle[] {
@@ -57,6 +57,7 @@ public class AlienUFO extends Enemy {
         ImageIcon ii = new ImageIcon(IMG_ALIEN_UFO);
         setImage(ii.getImage());
         currentFrame = flyingFrames[0];
+        bomb = new Bomb(x, y);
     }
 
     @Override
