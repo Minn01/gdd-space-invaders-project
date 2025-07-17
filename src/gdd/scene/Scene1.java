@@ -567,6 +567,7 @@ public class Scene1 extends JPanel {
 
             int x = player.getX();
             int y = player.getY();
+            int w = player.getWidth();
 
             int key = e.getKeyCode();
 
@@ -574,7 +575,7 @@ public class Scene1 extends JPanel {
                 System.out.println("Shots: " + shots.size());
                 if (shots.size() < 4) {
                     // Create a new shot and add it to the list
-                    Shot shot = new Shot(x, y);
+                    Shot shot = new Shot(x, y, w);
                     shots.add(shot);
                 }
             }

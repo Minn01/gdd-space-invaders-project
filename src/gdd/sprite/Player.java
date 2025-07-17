@@ -1,146 +1,146 @@
 package gdd.sprite;
 
 import static gdd.Global.*;
-import java.awt.Rectangle;
+
+import java.awt.*;
 import java.awt.event.KeyEvent;
-import javax.swing.ImageIcon;
+import java.awt.image.BufferedImage;
+import javax.swing.*;
 
 public class Player extends Sprite {
 
+    // Position and Scaling
     private static final int START_X = 270;
     private static final int START_Y = 540;
+    private static final double LOCAL_SCALE = 3.0;
+    private static final int FRAME_SIZE = 16;
 
-    private int width;
-    private int height;
-    private int currentSpeed = 5;
+    // Movement
+    private int dx = 0, dy = 0;
+    private int speed = 5;
 
-    public boolean rightPressed = false;
-    public boolean leftPressed = false;
-    public boolean upPressed = false;
-    public boolean downPressed = false;
+    // Sprite Dimensions
+    private final int width = (int)(FRAME_SIZE * LOCAL_SCALE);
+    private final int height = (int)(FRAME_SIZE * LOCAL_SCALE);
 
-    // This bound can be used to detect collisions
-    private Rectangle bounds = new Rectangle(175,135,17,32);
+    // State flags
+    private boolean leftPressed = false;
+    private boolean rightPressed = false;
+    private boolean upPressed = false;
+    private boolean downPressed = false;
+
+    // Sprites
+    private BufferedImage shipSheet;
+    private BufferedImage boosterIdle;
+    private BufferedImage boosterLeft;
+    private BufferedImage boosterRight;
 
     public Player() {
         initPlayer();
     }
 
     private void initPlayer() {
-        var ii = new ImageIcon(IMG_PLAYER);
-
-        // Scale the image to use the global scaling factor
-        var scaledImage = ii.getImage().getScaledInstance(ii.getIconWidth() * SCALE_FACTOR,
-                ii.getIconHeight() * SCALE_FACTOR,
-                java.awt.Image.SCALE_SMOOTH);
-        setImage(scaledImage);
-
-        width = ii.getIconWidth();
-        height = ii.getIconHeight();
+        shipSheet = toBufferedImage(new ImageIcon(IMG_SPACE_SHIP).getImage());
+        boosterIdle = toBufferedImage(new ImageIcon(IMG_BOOSTER).getImage());
+        boosterLeft = toBufferedImage(new ImageIcon(IMG_BOOSTER_LEFT).getImage());
+        boosterRight = toBufferedImage(new ImageIcon(IMG_BOOSTER_RIGHT).getImage());
 
         setX(START_X);
         setY(START_Y);
     }
 
-    public int getSpeed() {
-        return currentSpeed;
+    private BufferedImage toBufferedImage(Image img) {
+        if (img instanceof BufferedImage bi) return bi;
+
+        BufferedImage bimage = new BufferedImage(
+                img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB
+        );
+        Graphics2D g = bimage.createGraphics();
+        g.drawImage(img, 0, 0, null);
+        g.dispose();
+        return bimage;
     }
 
-    public int setSpeed(int speed) {
-        if (speed < 1) {
-            speed = 1; // Ensure speed is at least 1
-        }
-        this.currentSpeed = speed;
-        return currentSpeed;
+    @Override
+    public Image getImage() {
+        // Increase frame height to leave room for booster flames
+        int extendedHeight = height + height / 2;
+        BufferedImage frame = new BufferedImage(width, extendedHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = frame.createGraphics();
+
+        // --- Draw Ship ---
+        int frameX = leftPressed ? 0 : rightPressed ? 32 : 16;
+        BufferedImage ship = shipSheet.getSubimage(frameX, 0, FRAME_SIZE, FRAME_SIZE);
+        Image scaledShip = ship.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        g.drawImage(scaledShip, 0, 0, null);
+
+        // --- Draw Booster ---
+        BufferedImage booster = leftPressed ? boosterLeft :
+                rightPressed ? boosterRight :
+                        boosterIdle;
+
+        int boosterHeight = height / 2;
+        int boosterWidth = (int)(width * 0.6);
+        int boosterX = (width - boosterWidth) / 2;
+        int boosterY = height - boosterHeight / 4; // Adjust flame origin lower
+        Image scaledBooster = booster.getScaledInstance(boosterWidth, boosterHeight, Image.SCALE_SMOOTH);
+        g.drawImage(scaledBooster, boosterX, boosterY, null);
+
+        g.dispose();
+        return frame;
     }
+
 
     public void act() {
         x += dx;
         y += dy;
 
-        // for left side border limit
-        if (x <= 2) {
-            x = 2;
-        }
+        int frameHeight = height + height / 2;
 
-        // for right side border limit
-        if (x >= BOARD_WIDTH - width * 3) {
-            x = BOARD_WIDTH - width * 3;
-        }
-
-        // for upper side border limit
-        if (y < 2) {
-            y = 2;
-        }
-
-        // for lower side border limit
-        if (y >= BOARD_HEIGHT - height * 6) {
-            y = BOARD_HEIGHT - height * 6;
-        }
-        System.out.printf("x: %d, y: %d\n", x, y);
+        x = Math.max(0, Math.min(BOARD_WIDTH - width, x));
+        y = Math.max(0, Math.min(BOARD_HEIGHT - frameHeight, y));
     }
 
+
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_LEFT) {
-            dx = -1 * currentSpeed;
-            leftPressed = true;
-        }
-
-        if (key == KeyEvent.VK_RIGHT) {
-            dx = currentSpeed;
-            rightPressed = true;
-        }
-
-        if (key == KeyEvent.VK_UP) {
-            dy = -1 * currentSpeed;
-            upPressed = true;
-        }
-
-        if (key == KeyEvent.VK_DOWN) {
-            dy = currentSpeed;
-            downPressed = true;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT -> { dx = -speed; leftPressed = true; }
+            case KeyEvent.VK_RIGHT -> { dx = speed; rightPressed = true; }
+            case KeyEvent.VK_UP -> { dy = -speed; upPressed = true; }
+            case KeyEvent.VK_DOWN -> { dy = speed; downPressed = true; }
         }
     }
 
     public void keyReleased(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_LEFT) {
-            leftPressed = false;
-            if (rightPressed) {
-                dx = currentSpeed;
-            } else {
-                dx = 0;
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_LEFT -> {
+                leftPressed = false;
+                dx = rightPressed ? speed : 0;
+            }
+            case KeyEvent.VK_RIGHT -> {
+                rightPressed = false;
+                dx = leftPressed ? -speed : 0;
+            }
+            case KeyEvent.VK_UP -> {
+                upPressed = false;
+                dy = downPressed ? speed : 0;
+            }
+            case KeyEvent.VK_DOWN -> {
+                downPressed = false;
+                dy = upPressed ? -speed : 0;
             }
         }
+    }
 
-        if (key == KeyEvent.VK_RIGHT) {
-            rightPressed = false;
-            if (leftPressed) {
-                dx = -1 * currentSpeed;
-            } else {
-                dx = 0;
-            }
-        }
+    // Optional Getter/Setter for speed if needed
+    public int getSpeed() { return speed; }
 
-        if (key == KeyEvent.VK_UP) {
-            upPressed = false;
-            if (downPressed) {
-                dy = currentSpeed;
-            } else {
-                dy = 0;
-            }
-        }
+    public int setSpeed(int speed) {
+        this.speed = Math.max(1, speed);
+        return this.speed;
+    }
 
-        if (key == KeyEvent.VK_DOWN) {
-            downPressed = false;
-            if (upPressed) {
-                dy = -1 * currentSpeed;
-            } else {
-                dy = 0;
-            }
-        }
+    public int getWidth() {
+        return width;
     }
 }
