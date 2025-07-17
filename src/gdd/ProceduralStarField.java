@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ProceduralStarField {
 
-    // Reduced star counts for better performance
+    // Increased star counts for denser star field
     private List<StarLayer> starLayers;
     private Random random;
     private long seed;
@@ -47,10 +47,10 @@ public class ProceduralStarField {
     private void initializeOptimizedStarLayers() {
         starLayers = new ArrayList<>();
 
-        // MUCH fewer stars - quality over quantity
-        // Background layer - static, cached
+        // INCREASED star counts for denser star field
+        // Background layer - static, cached - increased from 80 to 300
         starLayers.add(new StarLayer(
-                80,            // Reduced from 200
+                300,           // Increased from 80
                 0.1f,          // Very slow
                 new Color(80, 80, 100, 120),
                 1, 1,          // All same size for batching
@@ -58,9 +58,9 @@ public class ProceduralStarField {
                 true           // This layer gets cached
         ));
 
-        // Middle layer
+        // Middle layer - increased from 40 to 150
         starLayers.add(new StarLayer(
-                40,            // Reduced from 100
+                150,           // Increased from 40
                 0.4f,
                 new Color(160, 160, 200, 180),
                 2, 2,          // Same size
@@ -68,14 +68,24 @@ public class ProceduralStarField {
                 false
         ));
 
-        // Foreground layer - most noticeable
+        // Foreground layer - most noticeable - increased from 20 to 80
         starLayers.add(new StarLayer(
-                20,            // Reduced from 50
+                80,            // Increased from 20
                 1.0f,
                 Color.WHITE,
                 3, 4,          // Slight size variation
                 0.1f,
                 false
+        ));
+
+        // NEW: Additional distant layer for even more density
+        starLayers.add(new StarLayer(
+                200,           // New layer with many small stars
+                0.05f,         // Very slow movement
+                new Color(60, 60, 80, 80),
+                1, 1,          // Small uniform stars
+                0.0f,          // No twinkling
+                true           // Cached for performance
         ));
 
         generateInitialStars();
@@ -193,7 +203,7 @@ public class ProceduralStarField {
     }
 
     public void draw(Graphics2D g2d) {
-        // Draw cached background layer first
+        // Draw cached background layers first
         if (cacheNeedsUpdate) {
             updateBackgroundCache();
         }
@@ -202,9 +212,11 @@ public class ProceduralStarField {
         // Draw dynamic layers with minimal rendering quality
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-        // Skip background layer (index 0) since it's cached
-        for (int i = 1; i < starLayers.size(); i++) {
-            drawLayerOptimized(g2d, starLayers.get(i));
+        // Skip cached layers (background layers) since they're cached
+        for (int i = 0; i < starLayers.size(); i++) {
+            if (!starLayers.get(i).cached) {
+                drawLayerOptimized(g2d, starLayers.get(i));
+            }
         }
     }
 
@@ -214,8 +226,12 @@ public class ProceduralStarField {
         cacheGraphics.fillRect(0, 0, screenWidth, screenHeight);
         cacheGraphics.setComposite(AlphaComposite.SrcOver);
 
-        // Draw background layer to cache
-        drawLayerOptimized(cacheGraphics, starLayers.get(0));
+        // Draw all cached layers to cache
+        for (int i = 0; i < starLayers.size(); i++) {
+            if (starLayers.get(i).cached) {
+                drawLayerOptimized(cacheGraphics, starLayers.get(i));
+            }
+        }
         cacheNeedsUpdate = false;
     }
 
