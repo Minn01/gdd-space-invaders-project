@@ -36,5 +36,6 @@ public class Global {
     public static final String IMG_TITLE = "src/images/title.png";
     public static final String IMG_POWERUP_SPEEDUP = "src/images/powerup-s.png";
     public static final String IMG_ALIEN_UFO = "src/images/alien_ufo.png";
+    public static final String IMG_FLYINNG_ALIEN = "src/images/flying_alien.png";
 
 }

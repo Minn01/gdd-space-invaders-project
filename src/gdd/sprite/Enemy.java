@@ -11,6 +11,7 @@ public class Enemy extends Sprite {
 
         initEnemy(x, y);
     }
+    
 
     private void initEnemy(int x, int y) {
 

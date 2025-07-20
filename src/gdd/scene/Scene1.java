@@ -6,8 +6,8 @@ import static gdd.Global.*;
 import gdd.SpawnDetails;
 import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
-import gdd.sprite.Alien1;
 import gdd.sprite.AlienUFO;
+import gdd.sprite.FlyingAlien;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
 import gdd.sprite.Player;
@@ -112,7 +112,7 @@ public class Scene1 extends JPanel {
         // TODO load this from a file
         spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
         spawnMap.put(200, new SpawnDetails("AlienUFO", 200, 0));
-        spawnMap.put(300, new SpawnDetails("AlienUFO", 300, 0));
+        spawnMap.put(300, new SpawnDetails("FlyingAlien", 300, 0));
 
         spawnMap.put(400, new SpawnDetails("AlienUFO", 400, 0));
         spawnMap.put(401, new SpawnDetails("AlienUFO", 450, 0));
@@ -300,7 +300,7 @@ public class Scene1 extends JPanel {
 
     private void drawExplosions(Graphics g) {
 
-       // List<Explosion> toRemove = new ArrayList<>();
+        // List<Explosion> toRemove = new ArrayList<>();
 
         for (Explosion explosion : explosions) {
 
@@ -309,12 +309,12 @@ public class Scene1 extends JPanel {
                 g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
                 // explosion.visibleCountDown();
                 // if (!explosion.isVisible()) {
-                //     toRemove.add(explosion);
+                // toRemove.add(explosion);
                 // }
             }
         }
 
-        //explosions.removeAll(toRemove);
+        // explosions.removeAll(toRemove);
     }
 
     @Override
@@ -389,7 +389,9 @@ public class Scene1 extends JPanel {
                     break;
 
                 // Add more cases for different enemy types if needed
-                case "Alien2":
+                case "FlyingAlien":
+                    Enemy FlyingAlien = new FlyingAlien(sd.x, sd.y);
+                    enemies.add(FlyingAlien);
                     // Enemy enemy2 = new Alien2(sd.x, sd.y);
                     // enemies.add(enemy2);
                     break;

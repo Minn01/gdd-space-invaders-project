@@ -14,7 +14,7 @@ public class Explosion extends Sprite {
 
     private int animationCounter = 0;
     private int currentFrameIndex = 0;
-    private final int ANIMATION_DELAY = 2;
+    private final int ANIMATION_DELAY = 3;
     private Rectangle currentFrame;
 
     // private static final String ACT_FLYING = "FLYING";
