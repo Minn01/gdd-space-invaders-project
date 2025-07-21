@@ -3,30 +3,24 @@ package gdd.scene;
 import gdd.*;
 
 import static gdd.Global.*;
-
 import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
-import gdd.sprite.Alien1;
 import gdd.sprite.AlienUFO;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
 import gdd.sprite.Player;
 import gdd.sprite.Shot;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -39,6 +33,8 @@ public class Scene1 extends JPanel {
     private List<Shot> shots;
     private Player player;
     // private Shot shot;
+
+    private int lives = 3;
 
     final int BLOCKHEIGHT = 50;
     final int BLOCKWIDTH = 50;
@@ -56,6 +52,8 @@ public class Scene1 extends JPanel {
 
     private Timer timer;
     private final Game game;
+
+    int score = 0;
 
     private int currentRow = -1;
     // TODO load this map from a file
@@ -86,6 +84,16 @@ public class Scene1 extends JPanel {
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }
     };
+
+    private String fadeMessage = "";
+    private int fadeAlpha = 0;
+    private int fadeTimer = 0;
+    private boolean isFading = false;
+
+    // Stage tracking
+    private int currentStage = 1;
+    private boolean stage2MessageShown = false;
+    private boolean stage3MessageShown = false;
 
     private HashMap<Integer, SpawnDetails> spawnMap = new HashMap<>();
     private AudioPlayer audioPlayer;
@@ -251,6 +259,17 @@ public class Scene1 extends JPanel {
 
     }
 
+    private void drawScore(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
+
+        // Format score with leading zeros (8 digits)
+        String formattedScore = String.format("%08d", score);
+
+        // Draw score at top-left
+        g.drawString(formattedScore, 20, 40);
+    }
+
     private void drawStarCluster(Graphics g, int x, int y, int width, int height) {
         // Set star color to white
         g.setColor(Color.WHITE);
@@ -378,12 +397,16 @@ public class Scene1 extends JPanel {
 
         if (inGame) {
 
-            drawMap(g); // Draw background stars first
-            drawExplosions(g);
-            drawPowreUps(g);
+            if (!isFading) {
+                drawMap(g); // Draw background stars first
+            }
             drawAliens(g);
+            drawPowreUps(g);
+            drawExplosions(g);
             drawPlayer(g);
             drawShot(g);
+            drawScore(g);
+            drawFadeMessage(g);
 
         } else {
 
@@ -417,13 +440,23 @@ public class Scene1 extends JPanel {
     }
 
     private void update() {
-        spawnEntity();
-
-        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
-            inGame = false;
-            timer.stop();
-            message = "Game won!";
+        if (!isFading) {
+            spawnEntity();
         }
+
+        if (frame % 60 == 0) {
+            score++;
+        }
+
+//        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
+//            inGame = false;
+//            timer.stop();
+//            message = "Game won!";
+//        }
+
+        // for stage transitions
+        checkStageTransitions();
+        updateFadeMessage();
 
         // player
         player.act();
@@ -439,12 +472,22 @@ public class Scene1 extends JPanel {
         }
 
         // Enemies
-        for (Enemy enemy : enemies) {
+        // using iterator so that you can remove elements within a list whilst looping over them :)
+        Iterator<Enemy> iterator = enemies.iterator();
+
+        while (iterator.hasNext()) {
+            Enemy enemy = iterator.next();
+
             if (enemy.isVisible()) {
-                enemy.act(direction);
+                int y = enemy.getY();
+
+                if (y >= BOARD_HEIGHT) {
+                    iterator.remove();
+                } else {
+                    enemy.act(direction); // only act if not removed
+                }
             }
         }
-
         // explosion
 
         List<Explosion> explosionsToRemove = new ArrayList<>();
@@ -481,6 +524,7 @@ public class Scene1 extends JPanel {
                         // var ii = new ImageIcon(IMG_EXPLOSION);
                         // enemy.setImage(ii.getImage());
 
+                        score += 5;
                         explosions.add(new Explosion(enemyX, enemyY));
 
                         deaths++;
@@ -572,11 +616,211 @@ public class Scene1 extends JPanel {
          */
     }
 
+    // Method to trigger a fade message
+    private void showFadeMessage(String message) {
+        fadeMessage = message;
+        fadeAlpha = 0;
+        fadeTimer = 0;
+        isFading = true;
+
+        // Initialize action lines
+        showActionLines = true;
+        actionLineTimer = 0;
+        actionLines.clear();
+    }
+
+    private void checkStageTransitions() {
+        // Stage 2 transition
+        if (frame >= STAGE_1_END && !stage2MessageShown) {
+            enemies.clear();
+            currentStage = 2;
+            showFadeMessage("Your enemies grow stronger...");
+            stage2MessageShown = true;
+        }
+
+        // Stage 3 transition
+        if (frame >= STAGE_2_END && !stage3MessageShown) {
+            enemies.clear();
+            currentStage = 3;
+            showFadeMessage("The final assault begins...");
+            stage3MessageShown = true;
+        }
+    }
+
+    // Add this to your update() method to handle fading
+    private void updateFadeMessage() {
+        if (isFading) {
+            fadeTimer++;
+
+            if (fadeTimer <= FADE_IN_FRAMES) {
+                // Fade in
+                fadeAlpha = (int) (255 * ((double) fadeTimer / FADE_IN_FRAMES));
+            } else if (fadeTimer <= FADE_IN_FRAMES + FADE_HOLD_FRAMES) {
+                // Hold at full opacity
+                fadeAlpha = 255;
+            } else if (fadeTimer <= FADE_IN_FRAMES + FADE_HOLD_FRAMES + FADE_OUT_FRAMES) {
+                // Fade out
+                int fadeOutProgress = fadeTimer - FADE_IN_FRAMES - FADE_HOLD_FRAMES;
+                fadeAlpha = 255 - (int) (255 * ((double) fadeOutProgress / FADE_OUT_FRAMES));
+            } else {
+                // Fade complete
+                isFading = false;
+                fadeAlpha = 0;
+                fadeMessage = "";
+                showActionLines = false; // Stop action lines when fade is complete
+            }
+        }
+
+        // Handle action lines
+        if (showActionLines) {
+            actionLineTimer++;
+
+            // Start showing action lines after a delay
+            if (actionLineTimer >= ACTION_LINE_DELAY) {
+                // Generate new action lines periodically
+                if (actionLineTimer % 3 == 0) { // Every 3 frames
+                    for (int i = 0; i < 5; i++) {
+                        int x = randomizer.nextInt(BOARD_WIDTH);
+                        int y = -randomizer.nextInt(100); // Start above screen
+                        int length = 20 + randomizer.nextInt(40);
+                        int speed = 8 + randomizer.nextInt(12);
+                        actionLines.add(new ActionLine(x, y, length, speed));
+                    }
+                }
+            }
+
+            // Update existing action lines
+            List<ActionLine> linesToRemove = new ArrayList<>();
+            for (ActionLine line : actionLines) {
+                line.update();
+                if (!line.isVisible()) {
+                    linesToRemove.add(line);
+                }
+            }
+            actionLines.removeAll(linesToRemove);
+
+            // Stop action lines after duration
+            if (actionLineTimer >= ACTION_LINE_DURATION) {
+                showActionLines = false;
+                actionLines.clear();
+            }
+        }
+    }
+
+    private void drawFadeMessage(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        // Draw action lines first (behind the message)
+        if (showActionLines && actionLineTimer >= ACTION_LINE_DELAY) {
+            for (ActionLine line : actionLines) {
+                line.draw(g2d);
+            }
+        }
+
+        if (isFading && fadeAlpha > 0) {
+            // Set up font and get metrics
+            Font messageFont = new Font("Arial", Font.BOLD, 36);
+            FontMetrics fm = g2d.getFontMetrics(messageFont);
+
+            // Calculate position to center the text
+            int textWidth = fm.stringWidth(fadeMessage);
+            int textHeight = fm.getHeight();
+            int x = (BOARD_WIDTH - textWidth) / 2;
+            int y = (BOARD_HEIGHT - textHeight) / 2;
+
+            // Create semi-transparent background
+            g2d.setColor(new Color(0, 0, 0, Math.min(fadeAlpha, 150))); // Dark background
+            g2d.fillRoundRect(x - 20, y - textHeight + 10, textWidth + 40, textHeight + 20, 10, 10);
+
+            // Draw the text with fade effect
+            g2d.setColor(new Color(255, 255, 255, fadeAlpha)); // White text
+            g2d.setFont(messageFont);
+            g2d.drawString(fadeMessage, x, y);
+
+            // Optional: Add a subtle glow effect
+            g2d.setColor(new Color(255, 255, 0, fadeAlpha / 3)); // Yellow glow
+            g2d.drawString(fadeMessage, x - 1, y - 1);
+            g2d.drawString(fadeMessage, x + 1, y + 1);
+        }
+    }
+
+    // Add these fields to your Scene1 class
+    private boolean showActionLines = false;
+    private int actionLineTimer = 0;
+    private final int ACTION_LINE_DURATION = 180; // 3 seconds at 60 FPS
+    private final int ACTION_LINE_DELAY = 30; // Start action lines after 0.5 seconds of fade message
+    private List<ActionLine> actionLines = new ArrayList<>();
+
+    // ActionLine helper class - add this inside Scene1 or as a separate class
+    private class ActionLine {
+        private int x, y;
+        private int length;
+        private int speed;
+        private Color color;
+        private int alpha;
+
+        public ActionLine(int x, int y, int length, int speed) {
+            this.x = x;
+            this.y = y;
+            this.length = length;
+            this.speed = speed;
+            this.alpha = 255;
+            // Vary the color slightly for more dynamic effect
+            int variation = randomizer.nextInt(50);
+            this.color = new Color(200 + variation, 200 + variation, 255);
+        }
+
+        public void update() {
+            y += speed;
+            // Fade out as they move
+            alpha = Math.max(0, alpha - 3);
+        }
+
+        public void draw(Graphics2D g2d) {
+            if (alpha > 0) {
+                g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha));
+                g2d.setStroke(new BasicStroke(2));
+                g2d.drawLine(x, y, x, y + length);
+            }
+        }
+
+        public boolean isVisible() {
+            return y < BOARD_HEIGHT + length && alpha > 0;
+        }
+    }
+
     private void doGameCycle() {
-        frame++;
+        if (!isFading) {
+            frame++;
+//            frame += 10;
+        }
         update();
         repaint();
     }
+
+    private void saveScore(int score) {
+        String json = "{ \"highScore\": " + score + " }";
+        try (FileWriter file = new FileWriter("score.json")) {
+            file.write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int loadScore() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("score.json"))) {
+            String line = reader.readLine();
+            if (line != null) {
+                // very simple manual parsing
+                line = line.replaceAll("[^0-9]", "");  // removes non-digits
+                return Integer.parseInt(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0; // default if file not found or error
+    }
+
 
     private class GameCycle implements ActionListener {
 
@@ -595,7 +839,7 @@ public class Scene1 extends JPanel {
 
         @Override
         public void keyPressed(KeyEvent e) {
-            System.out.println("Scene2.keyPressed: " + e.getKeyCode());
+//            System.out.println("Scene2.keyPressed: " + e.getKeyCode());
 
             player.keyPressed(e);
 

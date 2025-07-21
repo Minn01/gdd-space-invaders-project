@@ -41,4 +41,10 @@ public class Global {
     public static final int STAGE_1_END = 18000;   // 5 minutes
     public static final int STAGE_2_END = 36000;   // 10 minutes
     public static final int STAGE_3_END = 54000; // 15 minutes
+
+    // Constants for fading
+    public static final int FADE_DURATION = 180; // 3 seconds at 60fps
+    public static final int FADE_IN_FRAMES = 60;  // 1 second fade in
+    public static final int FADE_OUT_FRAMES = 60; // 1 second fade out
+    public static final int FADE_HOLD_FRAMES = 60; // 1 second hold at full opacity
 }

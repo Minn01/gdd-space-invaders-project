@@ -30,8 +30,8 @@ public class SpeedUp extends PowerUp {
 
     public void upgrade(Player player) {
         // Upgrade the player with speed boost
-        player.setSpeed(player.getSpeed() + 4); // Increase player's speed by 1
+        player.setSpeed(player.getSpeed() + 1); // Increase player's speed by 1
         this.die(); // Remove the power-up after use
-    }
+        }
 
 }
