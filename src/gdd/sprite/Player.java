@@ -23,6 +23,11 @@ public class Player extends Sprite {
     private final int width = (int)(FRAME_SIZE * LOCAL_SCALE);
     private final int height = (int)(FRAME_SIZE * LOCAL_SCALE);
 
+    // Booster animation
+    private int animationTick = 0;
+    private static final int ANIMATION_SPEED = 10;
+    private boolean boosterFrameToggle = false;
+
     // State flags
     private boolean leftPressed = false;
     private boolean rightPressed = false;
@@ -74,13 +79,27 @@ public class Player extends Sprite {
         Image scaledShip = ship.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         g.drawImage(scaledShip, 0, 0, null);
 
-        // --- Draw Booster ---
-        BufferedImage booster = leftPressed ? boosterLeft :
-                rightPressed ? boosterRight :
-                        boosterIdle;
+        // --- Draw Anime Booster ---
+        BufferedImage booster;
+        if (leftPressed) {
+            int frameW = boosterLeft.getWidth() / 2;
+            int frameH = boosterLeft.getHeight();
+            int sx = boosterFrameToggle ? frameW : 0;
+            booster = boosterLeft.getSubimage(sx, 0, frameW, frameH);
+        } else if (rightPressed) {
+            int frameW = boosterRight.getWidth() / 2;
+            int frameH = boosterRight.getHeight();
+            int sx = boosterFrameToggle ? frameW : 0;
+            booster = boosterRight.getSubimage(sx, 0, frameW, frameH);
+        } else {
+            int frameW = boosterIdle.getWidth() / 2;
+            int frameH = boosterIdle.getHeight();
+            int sx = boosterFrameToggle ? frameW : 0;
+            booster = boosterIdle.getSubimage(sx, 0, frameW, frameH);
+        }
 
         int boosterHeight = height / 2;
-        int boosterWidth = (int)(width * 0.6);
+        int boosterWidth = (int)(width * 0.4);
         int boosterX = (width - boosterWidth) / 2;
         int boosterY = height - boosterHeight / 4; // Adjust flame origin lower
         Image scaledBooster = booster.getScaledInstance(boosterWidth, boosterHeight, Image.SCALE_SMOOTH);
@@ -99,6 +118,12 @@ public class Player extends Sprite {
 
         x = Math.max(0, Math.min(BOARD_WIDTH - width, x));
         y = Math.max(0, Math.min(BOARD_HEIGHT - frameHeight, y));
+
+        animationTick++;
+        if (animationTick >= ANIMATION_SPEED) {
+            boosterFrameToggle = !boosterFrameToggle;
+            animationTick = 0;
+        }
     }
 
 
