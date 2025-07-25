@@ -1,6 +1,8 @@
 package gdd.sprite;
 
 import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
 abstract public class Sprite {
 
@@ -76,9 +78,37 @@ abstract public class Sprite {
 
     public void setDying(boolean dying) {
         this.dying = dying;
+    
     }
 
     public boolean isDying() {
         return this.dying;
     }
+
+    public BufferedImage toBufferedImage(Image img) {
+        if (img instanceof BufferedImage bImage) {
+            return bImage;
+        }
+    
+        // Create a buffered image with transparency
+        BufferedImage bimage = new BufferedImage(
+            img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB
+        );
+    
+        // Draw the image onto the buffered image
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.drawImage(img, 0, 0, null);
+        bGr.dispose();
+    
+        return bimage;
+    }
+
+    public int getWidth() {
+        return image != null ? image.getWidth(null) : 0;
+    }
+    
+    public int getHeight() {
+        return image != null ? image.getHeight(null) : 0;
+    }
+
 }
