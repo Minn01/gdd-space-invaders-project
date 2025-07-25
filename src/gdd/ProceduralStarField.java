@@ -239,10 +239,18 @@ public class ProceduralStarField {
         // Batch draw same-sized stars
         Map<Integer, List<Star>> starsBySize = new HashMap<>();
 
-        for (Star star : layer.stars) {
+        // ✅ Make a snapshot copy to avoid ConcurrentModificationException
+        List<Star> starSnapshot;
+        synchronized (layer.stars) {
+            starSnapshot = new ArrayList<>(layer.stars);
+        }
+
+        for (Star star : starSnapshot) {
             if (!star.visible) continue;
 
-            starsBySize.computeIfAbsent(star.size, k -> new ArrayList<>()).add(star);
+            starsBySize
+                    .computeIfAbsent(star.size, k -> new ArrayList<>())
+                    .add(star);
         }
 
         // Draw each size batch
