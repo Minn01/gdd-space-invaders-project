@@ -4,5 +4,5 @@ public enum SpawnType {
     // enemies
     ALIEN_UFO, ALIEN,
     // power-ups
-    SPEED_BOOST
+    SPEED_BOOST, LIFE, SHIELD
 }

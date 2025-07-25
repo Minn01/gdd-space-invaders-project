@@ -3,7 +3,10 @@ package gdd.scene;
 import gdd.*;
 
 import static gdd.Global.*;
+
+import gdd.powerup.Life;
 import gdd.powerup.PowerUp;
+import gdd.powerup.Shield;
 import gdd.powerup.SpeedUp;
 import gdd.sprite.AlienUFO;
 import gdd.sprite.Enemy;
@@ -34,8 +37,6 @@ public class Scene1 extends JPanel {
     private Player player;
     // private Shot shot;
 
-    private int lives = 3;
-
     final int BLOCKHEIGHT = 50;
     final int BLOCKWIDTH = 50;
 
@@ -53,7 +54,8 @@ public class Scene1 extends JPanel {
     private Timer timer;
     private final Game game;
 
-    int score = 0;
+    private int score = 0;
+    private Shield currentShield;
 
     private int currentRow = -1;
     // TODO load this map from a file
@@ -139,6 +141,8 @@ public class Scene1 extends JPanel {
         } catch (IOException e) {
             System.err.println("Error loading spawn data from CSV: " + e.getMessage());
         }
+        spawnMap.put(100, new SpawnDetails(SpawnType.LIFE, 200, 100, 1, 0));
+        spawnMap.put(200, new SpawnDetails(SpawnType.SHIELD, 200, 100, 1, 0));
     }
 
     // function to spawn anything from spawn map
@@ -166,6 +170,15 @@ public class Scene1 extends JPanel {
                         PowerUp speedUp = new SpeedUp(xPosition, sd.getY());
                         powerups.add(speedUp);
                         System.out.println("Entity Spawned at frame: " + frame);
+                        break;
+                    case LIFE:
+                        PowerUp life = new Life(xPosition, sd.getY());
+                        powerups.add(life);
+                        break;
+                    case SHIELD:
+                        Shield shield = new Shield(xPosition, sd.getY());
+                        currentShield = shield;
+                        powerups.add(shield);
                         break;
                     default:
                         System.out.println("Unknown enemy type: " + sd.getType());
@@ -259,6 +272,11 @@ public class Scene1 extends JPanel {
 
     }
 
+    private void drawGameInfo(Graphics g) {
+        drawScore(g);
+        drawLife(g);
+    }
+
     private void drawScore(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
@@ -268,6 +286,19 @@ public class Scene1 extends JPanel {
 
         // Draw score at top-left
         g.drawString(formattedScore, 20, 40);
+    }
+
+    private void drawLife(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
+        String livesText = "Lives: " + player.getLives();
+
+        // Get font metrics to calculate text width for right alignment
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(livesText);
+
+        // Draw in top right corner (10 pixels from right edge, 15 pixels from top)
+        g.drawString(livesText, d.width - textWidth - 25, 40);
     }
 
     private void drawStarCluster(Graphics g, int x, int y, int width, int height) {
@@ -324,6 +355,7 @@ public class Scene1 extends JPanel {
             }
         }
     }
+
 
     private void drawPlayer(Graphics g) {
 
@@ -387,6 +419,8 @@ public class Scene1 extends JPanel {
 
     private void doDrawing(Graphics g) {
 
+        Graphics2D g2d = (Graphics2D) g.create();
+
         g.setColor(Color.black);
         g.fillRect(0, 0, d.width, d.height);
 
@@ -404,8 +438,9 @@ public class Scene1 extends JPanel {
             drawPowreUps(g);
             drawExplosions(g);
             drawPlayer(g);
+            Shield.drawActiveShield(player, g2d);
             drawShot(g);
-            drawScore(g);
+            drawGameInfo(g);
             drawFadeMessage(g);
 
         } else {
@@ -447,12 +482,6 @@ public class Scene1 extends JPanel {
         if (frame % 60 == 0) {
             score++;
         }
-
-//        if (deaths == NUMBER_OF_ALIENS_TO_DESTROY) {
-//            inGame = false;
-//            timer.stop();
-//            message = "Game won!";
-//        }
 
         // for stage transitions
         checkStageTransitions();
@@ -524,13 +553,18 @@ public class Scene1 extends JPanel {
                         // var ii = new ImageIcon(IMG_EXPLOSION);
                         // enemy.setImage(ii.getImage());
 
-                        score += 5;
-                        explosions.add(new Explosion(enemyX, enemyY));
+                        if (!player.isShieldActive()) {
+                            score += 5;
+                            explosions.add(new Explosion(enemyX, enemyY));
 
-                        deaths++;
-                        enemy.setDying(true);
-                        shot.die();
-                        shotsToRemove.add(shot);
+                            deaths++;
+                            enemy.setDying(true);
+                            shot.die();
+                            shotsToRemove.add(shot);
+                        } else {
+                            player.setShieldActive(false);
+                            currentShield.disposeShieldTimer();
+                        }
                     }
                 }
 
@@ -642,7 +676,7 @@ public class Scene1 extends JPanel {
         if (frame >= STAGE_2_END && !stage3MessageShown) {
             enemies.clear();
             currentStage = 3;
-            showFadeMessage("The final assault begins...");
+            showFadeMessage("Meet the big boss...");
             stage3MessageShown = true;
         }
     }
@@ -792,7 +826,6 @@ public class Scene1 extends JPanel {
     private void doGameCycle() {
         if (!isFading) {
             frame++;
-//            frame += 10;
         }
         update();
         repaint();
@@ -856,7 +889,6 @@ public class Scene1 extends JPanel {
                     shots.add(shot);
                 }
             }
-
         }
     }
 }

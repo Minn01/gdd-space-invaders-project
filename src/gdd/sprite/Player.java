@@ -1,7 +1,8 @@
 package gdd.sprite;
 
 import static gdd.Global.*;
-import java.awt.Rectangle;
+
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
 
@@ -10,10 +11,20 @@ public class Player extends Sprite {
     private static final int START_X = 270;
     private static final int START_Y = 540;
     private int width;
+    private int height;
     private int currentSpeed = 3;
     public boolean rightPressed = false;
     public boolean leftPressed = false;
+    private int lives = 3;
+    private boolean shieldActive = false;
 
+    public int getLives() {
+        return lives;
+    }
+
+    public void setLives(int lives) {
+        this.lives = lives;
+    }
 
     private Rectangle bounds = new Rectangle(175,135,17,32);
 
@@ -30,6 +41,9 @@ public class Player extends Sprite {
                 java.awt.Image.SCALE_SMOOTH);
         setImage(scaledImage);
 
+        width = ii.getIconWidth();
+        height = ii.getIconHeight();
+
         setX(START_X);
         setY(START_Y);
     }
@@ -44,6 +58,14 @@ public class Player extends Sprite {
         }
         this.currentSpeed = speed;
         return currentSpeed;
+    }
+
+    public boolean isShieldActive() {
+        return shieldActive;
+    }
+
+    public void setShieldActive(boolean shieldActive) {
+        this.shieldActive = shieldActive;
     }
 
     public void act() {

@@ -57,6 +57,7 @@ public class AlienUFO extends Enemy {
         ImageIcon ii = new ImageIcon(IMG_ALIEN_UFO);
         setImage(ii.getImage());
         currentFrame = flyingFrames[0];
+        bomb = new Bomb(x, y);
     }
 
     @Override
