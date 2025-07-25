@@ -21,7 +21,8 @@ public class FlyingAlien extends Enemy {
 
     public FlyingAlien(int x, int y) {
         super(x, y);
-        ImageIcon ii = new ImageIcon(IMG_FLYINNG_ALIEN);
+        this.type = "FlyingAlien";
+        ImageIcon ii = new ImageIcon(IMG_FLYING_ALIEN);
         setImage(ii.getImage());
         currentFrame = flyingFrames[0];
     }

@@ -289,13 +289,25 @@ public class Scene1 extends JPanel {
     }
 
     private void drawBombing(Graphics g) {
+        // for (Enemy enemy : enemies) {
+        // if (enemy instanceof AlienUFO ufo) {
+        // for (AlienUFO.Bomb bomb : ufo.getBombs()) {
+        // if (!bomb.isDestroyed()) {
+        // g.drawImage(bomb.getImage(), bomb.getX(), bomb.getY(), this);
+        // }
+        // }
+        // }
+        // }
 
-        // for (Enemy e : enemies) {
-        // Enemy.Bomb b = e.getBomb();
-        // if (!b.isDestroyed()) {
-        // g.drawImage(b.getImage(), b.getX(), b.getY(), this);
-        // }
-        // }
+        for (Enemy enemy : enemies) {
+            for (Enemy.Bomb bomb : enemy.getBombs()) {
+                if (enemy instanceof AlienUFO ufo) {
+                    if (!bomb.isDestroyed()) {
+                        g.drawImage(bomb.getImage(), bomb.getX(), bomb.getY(), this);
+                    }
+                }
+            }
+        }
     }
 
     private void drawExplosions(Graphics g) {
@@ -340,6 +352,7 @@ public class Scene1 extends JPanel {
             drawExplosions(g);
             drawPowreUps(g);
             drawAliens(g);
+            drawBombing(g);
             drawPlayer(g);
             drawShot(g);
 
@@ -468,7 +481,7 @@ public class Scene1 extends JPanel {
                         // var ii = new ImageIcon(IMG_EXPLOSION);
                         // enemy.setImage(ii.getImage());
 
-                        explosions.add(new Explosion(enemyX, enemyY));
+                        explosions.add(new Explosion(enemy.getX(), enemy.getY(), enemy.getType()));
 
                         deaths++;
                         enemy.setDying(true);
@@ -491,72 +504,53 @@ public class Scene1 extends JPanel {
         }
         shots.removeAll(shotsToRemove);
 
-        // enemies
-        // for (Enemy enemy : enemies) {
-        // int x = enemy.getX();
-        // if (x >= BOARD_WIDTH - BORDER_RIGHT && direction != -1) {
-        // direction = -1;
-        // for (Enemy e2 : enemies) {
-        // e2.setY(e2.getY() + GO_DOWN);
-        // }
-        // }
-        // if (x <= BORDER_LEFT && direction != 1) {
-        // direction = 1;
-        // for (Enemy e : enemies) {
-        // e.setY(e.getY() + GO_DOWN);
-        // }
-        // }
-        // }
-        // for (Enemy enemy : enemies) {
-        // if (enemy.isVisible()) {
-        // int y = enemy.getY();
-        // if (y > GROUND - ALIEN_HEIGHT) {
-        // inGame = false;
-        // message = "Invasion!";
-        // }
-        // enemy.act(direction);
-        // }
-        // }
-        // bombs - collision detection
-        // Bomb is with enemy, so it loops over enemies
-        /*
-         * for (Enemy enemy : enemies) {
-         * 
-         * int chance = randomizer.nextInt(15);
-         * Enemy.Bomb bomb = enemy.getBomb();
-         * 
-         * if (chance == CHANCE && enemy.isVisible() && bomb.isDestroyed()) {
-         * 
-         * bomb.setDestroyed(false);
-         * bomb.setX(enemy.getX());
-         * bomb.setY(enemy.getY());
-         * }
-         * 
-         * int bombX = bomb.getX();
-         * int bombY = bomb.getY();
-         * int playerX = player.getX();
-         * int playerY = player.getY();
-         * 
-         * if (player.isVisible() && !bomb.isDestroyed()
-         * && bombX >= (playerX)
-         * && bombX <= (playerX + PLAYER_WIDTH)
-         * && bombY >= (playerY)
-         * && bombY <= (playerY + PLAYER_HEIGHT)) {
-         * 
-         * var ii = new ImageIcon(IMG_EXPLOSION);
-         * player.setImage(ii.getImage());
-         * player.setDying(true);
-         * bomb.setDestroyed(true);
-         * }
-         * 
-         * if (!bomb.isDestroyed()) {
-         * bomb.setY(bomb.getY() + 1);
-         * if (bomb.getY() >= GROUND - BOMB_HEIGHT) {
-         * bomb.setDestroyed(true);
-         * }
-         * }
-         * }
-         */
+        // bombs
+        for (Enemy enemy : enemies) {
+            if (enemy instanceof AlienUFO ufo) {
+
+                // Cooldown logic
+                enemy.tickCooldown();
+
+                // Random chance to drop a bomb
+                if (enemy.isVisible() && enemy.canDropBomb() && randomizer.nextInt(120) == 0) {
+                    enemy.dropBomb();
+                }
+
+                // Handle all bombs from this enemy
+                for (Enemy.Bomb bomb : enemy.getBombs()) {
+                    if (!bomb.isDestroyed()) {
+
+                        // Move bomb downward
+                        bomb.setY(bomb.getY() + 4);
+
+                        // If hits the ground, destroy it
+                        if (bomb.getY() >= GROUND - BOMB_HEIGHT) {
+                            bomb.setDestroyed(true);
+                        }
+
+                        // Collision with player
+                        int bombX = bomb.getX();
+                        int bombY = bomb.getY();
+                        int playerX = player.getX();
+                        int playerY = player.getY();
+
+                        if (player.isVisible()
+                                && bombX >= playerX && bombX <= (playerX + PLAYER_WIDTH)
+                                && bombY >= playerY && bombY <= (playerY + PLAYER_HEIGHT)) {
+
+                            // explosions.add(new Explosion(playerX, playerY));
+
+                            player.setDying(true);
+                            bomb.setDestroyed(true);
+                        }
+                    }
+                }
+
+                // Clean up destroyed bombs
+                enemy.updateBombs();
+            }
+        }
+
     }
 
     private void doGameCycle() {
