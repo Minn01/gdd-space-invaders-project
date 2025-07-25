@@ -6,12 +6,8 @@ import static gdd.Global.*;
 import gdd.SpawnDetails;
 import gdd.powerup.PowerUp;
 import gdd.powerup.SpeedUp;
-import gdd.sprite.AlienUFO;
-import gdd.sprite.FlyingAlien;
-import gdd.sprite.Enemy;
-import gdd.sprite.Explosion;
-import gdd.sprite.Player;
-import gdd.sprite.Shot;
+import gdd.sprite.*;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -21,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +35,8 @@ public class Scene1 extends JPanel {
     private List<Shot> shots;
     private Player player;
     // private Shot shot;
+
+    private PlayerExplosion playerExplosion;
 
     final int BLOCKHEIGHT = 50;
     final int BLOCKWIDTH = 50;
@@ -274,7 +273,9 @@ public class Scene1 extends JPanel {
         if (player.isDying()) {
 
             player.die();
-            inGame = false;
+            Timer inGameTimer = new Timer(5000, e -> inGame = false);
+            inGameTimer.setRepeats(false);
+            inGameTimer.start();
         }
     }
 
@@ -355,6 +356,7 @@ public class Scene1 extends JPanel {
             drawBombing(g);
             drawPlayer(g);
             drawShot(g);
+            drawPlayerExplosion(g);
 
         } else {
 
@@ -427,6 +429,11 @@ public class Scene1 extends JPanel {
 
         // player
         player.act();
+
+        // player explosion
+        if (player.isDying()) {
+            playerExplosion.act();
+        }
 
         // Power-ups
         for (PowerUp powerup : powerups) {
@@ -540,6 +547,7 @@ public class Scene1 extends JPanel {
 
                             // explosions.add(new Explosion(playerX, playerY));
 
+                            playerExplosion = new PlayerExplosion(playerX, playerY);
                             player.setDying(true);
                             bomb.setDestroyed(true);
                         }
@@ -552,6 +560,13 @@ public class Scene1 extends JPanel {
         }
 
     }
+
+    private void drawPlayerExplosion(Graphics g) {
+        if (playerExplosion != null){
+            g.drawImage(playerExplosion.getImage(), playerExplosion.getX(), playerExplosion.getY(), this);
+        }
+    }
+
 
     private void doGameCycle() {
         frame++;
@@ -598,3 +613,4 @@ public class Scene1 extends JPanel {
         }
     }
 }
+

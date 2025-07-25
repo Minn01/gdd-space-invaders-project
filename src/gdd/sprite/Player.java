@@ -54,7 +54,7 @@ public class Player extends Sprite {
         setY(START_Y);
     }
 
-    private BufferedImage toBufferedImage(Image img) {
+    public BufferedImage toBufferedImage(Image img) {
         if (img instanceof BufferedImage bi) return bi;
 
         BufferedImage bimage = new BufferedImage(
