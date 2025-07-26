@@ -38,6 +38,10 @@ public class Global {
     public static final String  IMG_POWERUP_SPEEDUP = "src/images/powerup-s.png";
     public static final String IMG_POWERUP_HEART = "src/images/life_powerup.png";
     public static final String IMG_POWERUP_SHIELD = "src/images/shield.png";
+    public static final String IMG_POWERUP_AMMO = "src/images/ammo_powerup.png";
+    public static final String IMG_SPEED_ICON = "src/images/speed_boost_icon.png";
+    public static final String IMG_AMMO_ICON = "src/images/ammo_info_icon.png";
+    public static final String IMG_HEALTH_ICON = "src/images/health_info_icon.png";
 
     // Stage timings in frame
     public static final int STAGE_1_END = 18000;   // 5 minutes (halfway)

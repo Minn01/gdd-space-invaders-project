@@ -16,7 +16,18 @@ public class Player extends Sprite {
     public boolean rightPressed = false;
     public boolean leftPressed = false;
     private int lives = 3;
+    private int speedStage = 1;
+    private int bulletStage = 1;
     private boolean shieldActive = false;
+    private boolean isOnCoolDown = false;
+
+    public boolean isOnCoolDown() {
+        return isOnCoolDown;
+    }
+
+    public void setOnCoolDown(boolean onCoolDown) {
+        isOnCoolDown = onCoolDown;
+    }
 
     public int getLives() {
         return lives;
@@ -66,6 +77,22 @@ public class Player extends Sprite {
 
     public void setShieldActive(boolean shieldActive) {
         this.shieldActive = shieldActive;
+    }
+
+    public int getSpeedStage() {
+        return speedStage;
+    }
+
+    public void setSpeedStage(int speedStage) {
+        this.speedStage = speedStage;
+    }
+
+    public int getBulletStage() {
+        return bulletStage;
+    }
+
+    public void setBulletStage(int bulletStage) {
+        this.bulletStage = bulletStage;
     }
 
     public void act() {

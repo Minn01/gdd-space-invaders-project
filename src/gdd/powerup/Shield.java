@@ -27,7 +27,7 @@ public class Shield extends PowerUp {
     @Override
     public void upgrade(Player player) {
         player.setShieldActive(true);
-        shieldTimer = new Timer(1000, e -> {
+        shieldTimer = new Timer(30000, e -> {
             player.setShieldActive(false);
             shieldTimer = null;
         });
@@ -42,7 +42,7 @@ public class Shield extends PowerUp {
     }
 
     public static void drawActiveShield(Player player, Graphics2D g2d) {
-        if (player.isShieldActive()) {
+        if (player.isShieldActive() && !player.isOnCoolDown()) {
             // Save the original composite
             Composite originalComposite = g2d.getComposite();
 
@@ -63,7 +63,6 @@ public class Shield extends PowerUp {
     }
 
     public void disposeShieldTimer() {
-        shieldTimer.stop();
         shieldTimer = null;
     }
 }

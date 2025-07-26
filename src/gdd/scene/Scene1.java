@@ -4,10 +4,7 @@ import gdd.*;
 
 import static gdd.Global.*;
 
-import gdd.powerup.Life;
-import gdd.powerup.PowerUp;
-import gdd.powerup.Shield;
-import gdd.powerup.SpeedUp;
+import gdd.powerup.*;
 import gdd.sprite.AlienUFO;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
@@ -24,7 +21,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.Timer;
 
 public class Scene1 extends JPanel {
@@ -56,6 +53,7 @@ public class Scene1 extends JPanel {
 
     private int score = 0;
     private Shield currentShield;
+    private boolean isOnCooldown = false;
 
     private int currentRow = -1;
     // TODO load this map from a file
@@ -120,20 +118,6 @@ public class Scene1 extends JPanel {
     }
 
     private void loadSpawnDetails() {
-//        // TODO load this from a file
-//        spawnMap.put(50, new SpawnDetails("PowerUp-SpeedUp", 100, 0));
-//        spawnMap.put(200, new SpawnDetails("AlienUFO", 200, 0));
-//        spawnMap.put(300, new SpawnDetails("AlienUFO", 300, 0));
-//
-//        spawnMap.put(400, new SpawnDetails("AlienUFO", 400, 0));
-//        spawnMap.put(401, new SpawnDetails("AlienUFO", 450, 0));
-//        spawnMap.put(402, new SpawnDetails("AlienUFO", 500, 0));
-//        spawnMap.put(403, new SpawnDetails("AlienUFO", 550, 0));
-//
-//        spawnMap.put(500, new SpawnDetails("AlienUFO", 100, 0));
-//        spawnMap.put(501, new SpawnDetails("AlienUFO", 150, 0));
-//        spawnMap.put(502, new SpawnDetails("AlienUFO", 200, 0));
-//        spawnMap.put(503, new SpawnDetails("AlienUFO", 350, 0));
         try {
             // Load from external file
             spawnMap = SpawnDetailsLoader.loadFromCSV("src/gdd/spawns.csv");
@@ -143,6 +127,12 @@ public class Scene1 extends JPanel {
         }
         spawnMap.put(100, new SpawnDetails(SpawnType.LIFE, 200, 100, 1, 0));
         spawnMap.put(200, new SpawnDetails(SpawnType.SHIELD, 200, 100, 1, 0));
+        spawnMap.put(300, new SpawnDetails(SpawnType.AMMO_UPGRADE, 200, 100, 1, 0));
+        spawnMap.put(400, new SpawnDetails(SpawnType.SPEED_BOOST, 200, 100, 1, 0));
+        spawnMap.put(800, new SpawnDetails(SpawnType.AMMO_UPGRADE, 200, 100, 1, 0));
+        spawnMap.put(900, new SpawnDetails(SpawnType.SPEED_BOOST, 200, 100, 1, 0));
+        spawnMap.put(1200, new SpawnDetails(SpawnType.AMMO_UPGRADE, 200, 100, 1, 0));
+        spawnMap.put(1400, new SpawnDetails(SpawnType.SPEED_BOOST, 200, 100, 1, 0));
     }
 
     // function to spawn anything from spawn map
@@ -179,6 +169,10 @@ public class Scene1 extends JPanel {
                         Shield shield = new Shield(xPosition, sd.getY());
                         currentShield = shield;
                         powerups.add(shield);
+                        break;
+                    case AMMO_UPGRADE:
+                        AmmoUpgrade ammoUpgrade = new AmmoUpgrade(xPosition, sd.getY());
+                        powerups.add(ammoUpgrade);
                         break;
                     default:
                         System.out.println("Unknown enemy type: " + sd.getType());
@@ -275,6 +269,8 @@ public class Scene1 extends JPanel {
     private void drawGameInfo(Graphics g) {
         drawScore(g);
         drawLife(g);
+        drawSpeedInfo(g);
+        drawAmmoInfo(g);
     }
 
     private void drawScore(Graphics g) {
@@ -288,17 +284,58 @@ public class Scene1 extends JPanel {
         g.drawString(formattedScore, 20, 40);
     }
 
+    private void drawAmmoInfo(Graphics g) {
+        // the text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
+        String text = player.getBulletStage() + "x";
+
+        // Get font metrics to calculate text width for right alignment
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+
+        // Draw in top right corner (10 pixels from right edge, 15 pixels from top)
+        g.drawString(text, d.width - textWidth - 330, 40);
+
+        // the image
+        ImageIcon ii = new ImageIcon(IMG_AMMO_ICON);
+        g.drawImage(ii.getImage(), d.width - 405, 10, this);
+    }
+
+    private void drawSpeedInfo(Graphics g) {
+        // the text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
+        String text = player.getSpeedStage() + "x";
+
+        // Get font metrics to calculate text width for right alignment
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+
+        // Draw in top right corner (10 pixels from right edge, 15 pixels from top)
+        g.drawString(text, d.width - textWidth - 230, 40);
+
+        // the image
+        ImageIcon ii = new ImageIcon(IMG_SPEED_ICON);
+        g.drawImage(ii.getImage(), d.width - 305, 10, this);
+
+    }
+
     private void drawLife(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Monospaced", Font.BOLD, 24)); // Use monospaced for equal character width
-        String livesText = "Lives: " + player.getLives();
+        String livesText = ": " + player.getLives();
 
         // Get font metrics to calculate text width for right alignment
         FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(livesText);
 
         // Draw in top right corner (10 pixels from right edge, 15 pixels from top)
-        g.drawString(livesText, d.width - textWidth - 25, 40);
+        g.drawString(livesText, d.width - textWidth - 40, 40);
+
+        // the image
+        ImageIcon ii = new ImageIcon(IMG_HEALTH_ICON);
+        g.drawImage(ii.getImage(), d.width - 130, 10, this);
     }
 
     private void drawStarCluster(Graphics g, int x, int y, int width, int height) {
@@ -357,11 +394,16 @@ public class Scene1 extends JPanel {
     }
 
 
-    private void drawPlayer(Graphics g) {
+    private void drawPlayer(Graphics2D g2d) {
 
         if (player.isVisible()) {
-
-            g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            if (player.isOnCoolDown()) {
+                float opacity = 0.5f; // Example: 50% transparent
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+                g2d.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            } else {
+                g2d.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            }
         }
 
         if (player.isDying()) {
@@ -383,12 +425,12 @@ public class Scene1 extends JPanel {
 
     private void drawBombing(Graphics g) {
 
-        // for (Enemy e : enemies) {
-        // Enemy.Bomb b = e.getBomb();
-        // if (!b.isDestroyed()) {
-        // g.drawImage(b.getImage(), b.getX(), b.getY(), this);
-        // }
-        // }
+         for (Enemy e : enemies) {
+         AlienUFO.Bomb b = ((AlienUFO) e).getBomb();
+             if (!b.isDestroyed()) {
+                g.drawImage(b.getImage(), b.getX(), b.getY(), this);
+            }
+         }
     }
 
     private void drawExplosions(Graphics g) {
@@ -437,7 +479,8 @@ public class Scene1 extends JPanel {
             drawAliens(g);
             drawPowreUps(g);
             drawExplosions(g);
-            drawPlayer(g);
+            drawBombing(g);
+            drawPlayer(g2d);
             Shield.drawActiveShield(player, g2d);
             drawShot(g);
             drawGameInfo(g);
@@ -472,6 +515,31 @@ public class Scene1 extends JPanel {
         g.setFont(small);
         g.drawString(message, (BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2,
                 BOARD_WIDTH / 2);
+    }
+
+    private void handleShooting() {
+        if (player.getBulletStage() == 1) {
+            // Single shot - straight up
+            shots.add(new Shot(player.getX() + player.getWidth() / 2, player.getY(), 0, -3));
+
+        } else if (player.getBulletStage() == 2) {
+            // Double shot - slight spread
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 - 10, player.getY(), -1, -3));
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 + 10, player.getY(), 1, -3));
+
+        } else if (player.getBulletStage() == 3) {
+            // Triple shot - center straight, sides angled
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 - 20, player.getY(), -2, -3));
+            shots.add(new Shot(player.getX() + player.getWidth() / 2, player.getY(), 0, -3));
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 + 20, player.getY(), 2, -3));
+
+        } else if (player.getBulletStage() == 4) {
+            // Quad shot - outer ones scatter more, inner ones slight scatter
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 - 30, player.getY(), -3, -3)); // Far left
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 - 10, player.getY(), -1, -3)); // Inner left
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 + 10, player.getY(), 1, -3));  // Inner right
+            shots.add(new Shot(player.getX() + player.getWidth() / 2 + 30, player.getY(), 3, -3));  // Far right
+        }
     }
 
     private void update() {
@@ -531,7 +599,7 @@ public class Scene1 extends JPanel {
         // shot
         List<Shot> shotsToRemove = new ArrayList<>();
         for (Shot shot : shots) {
-
+            shot.act();
             if (shot.isVisible()) {
                 int shotX = shot.getX();
                 int shotY = shot.getY();
@@ -553,18 +621,13 @@ public class Scene1 extends JPanel {
                         // var ii = new ImageIcon(IMG_EXPLOSION);
                         // enemy.setImage(ii.getImage());
 
-                        if (!player.isShieldActive()) {
-                            score += 5;
-                            explosions.add(new Explosion(enemyX, enemyY));
+                        score += 5;
+                        explosions.add(new Explosion(enemyX, enemyY));
 
-                            deaths++;
-                            enemy.setDying(true);
-                            shot.die();
-                            shotsToRemove.add(shot);
-                        } else {
-                            player.setShieldActive(false);
-                            currentShield.disposeShieldTimer();
-                        }
+                        deaths++;
+                        enemy.setDying(true);
+                        shot.die();
+                        shotsToRemove.add(shot);
                     }
                 }
 
@@ -598,57 +661,52 @@ public class Scene1 extends JPanel {
         // }
         // }
         // }
-        // for (Enemy enemy : enemies) {
-        // if (enemy.isVisible()) {
-        // int y = enemy.getY();
-        // if (y > GROUND - ALIEN_HEIGHT) {
-        // inGame = false;
-        // message = "Invasion!";
-        // }
-        // enemy.act(direction);
-        // }
-        // }
+//         for (Enemy enemy : enemies) {
+//             if (enemy.isVisible()) {
+//                 int y = enemy.getY();
+//                 if (y > GROUND - ALIEN_HEIGHT) {
+//                     inGame = false;
+//                     message = "Invasion!";
+//                }
+//                enemy.act(direction);
+//            }
+//         }
         // bombs - collision detection
         // Bomb is with enemy, so it loops over enemies
-        /*
-         * for (Enemy enemy : enemies) {
-         * 
-         * int chance = randomizer.nextInt(15);
-         * Enemy.Bomb bomb = enemy.getBomb();
-         * 
-         * if (chance == CHANCE && enemy.isVisible() && bomb.isDestroyed()) {
-         * 
-         * bomb.setDestroyed(false);
-         * bomb.setX(enemy.getX());
-         * bomb.setY(enemy.getY());
-         * }
-         * 
-         * int bombX = bomb.getX();
-         * int bombY = bomb.getY();
-         * int playerX = player.getX();
-         * int playerY = player.getY();
-         * 
-         * if (player.isVisible() && !bomb.isDestroyed()
-         * && bombX >= (playerX)
-         * && bombX <= (playerX + PLAYER_WIDTH)
-         * && bombY >= (playerY)
-         * && bombY <= (playerY + PLAYER_HEIGHT)) {
-         * 
-         * var ii = new ImageIcon(IMG_EXPLOSION);
-         * player.setImage(ii.getImage());
-         * player.setDying(true);
-         * bomb.setDestroyed(true);
-         * }
-         * 
-         * if (!bomb.isDestroyed()) {
-         * bomb.setY(bomb.getY() + 1);
-         * if (bomb.getY() >= GROUND - BOMB_HEIGHT) {
-         * bomb.setDestroyed(true);
-         * }
-         * }
-         * }
-         */
-    }
+
+        for (Enemy enemy : enemies) {
+            int chance = randomizer.nextInt(15);
+            AlienUFO.Bomb bomb = ((AlienUFO) enemy).getBomb();
+
+            if (chance == CHANCE && enemy.isVisible() && bomb.isDestroyed()) {
+                bomb.setDestroyed(false);
+                bomb.setX(enemy.getX());
+                bomb.setY(enemy.getY());
+            }
+
+            int bombX = bomb.getX();
+            int bombY = bomb.getY();
+            int playerX = player.getX();
+            int playerY = player.getY();
+
+            if (player.isVisible() && !bomb.isDestroyed()
+                    && bombX >= (playerX)
+                    && bombX <= (playerX + PLAYER_WIDTH)
+                    && bombY >= (playerY)
+                    && bombY <= (playerY + PLAYER_HEIGHT)) {
+                var ii = new ImageIcon(IMG_EXPLOSION);
+                bomb.setDestroyed(true);
+                handleCollision(ii);
+            }
+
+            if (!bomb.isDestroyed()) {
+                // make bomb go down
+                bomb.setY(bomb.getY() + 3);
+                if (bomb.getY() >= GROUND - BOMB_HEIGHT) {
+                    bomb.setDestroyed(true);
+                }
+            }
+        }    }
 
     // Method to trigger a fade message
     private void showFadeMessage(String message) {
@@ -678,6 +736,28 @@ public class Scene1 extends JPanel {
             currentStage = 3;
             showFadeMessage("Meet the big boss...");
             stage3MessageShown = true;
+        }
+    }
+
+    private void handleCollision(ImageIcon ii) {
+        player.setOnCoolDown(true);
+        if (!player.isShieldActive()) {
+            player.setLives(player.getLives() - 1);
+        } else {
+            currentShield.disposeShieldTimer();
+        }
+
+        // cool down period for player
+        new Timer(1000, e -> {
+            if (player.isShieldActive()) {
+                player.setShieldActive(false);
+            }
+            player.setOnCoolDown(false);
+        }).start();
+
+        if (player.getLives() == 0) {
+            player.setImage(ii.getImage());
+            player.setDying(true);
         }
     }
 
@@ -883,10 +963,9 @@ public class Scene1 extends JPanel {
 
             if (key == KeyEvent.VK_SPACE && inGame) {
                 System.out.println("Shots: " + shots.size());
-                if (shots.size() < 4) {
+                if (shots.size() < 4 * player.getBulletStage()) {
                     // Create a new shot and add it to the list
-                    Shot shot = new Shot(x, y);
-                    shots.add(shot);
+                    handleShooting();
                 }
             }
         }
