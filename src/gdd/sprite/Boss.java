@@ -14,22 +14,58 @@ import java.util.List;
 public class Boss extends Enemy {
 
     private final Rectangle[] bossFrames = new Rectangle[]{
-            new Rectangle(0, 6, 153, 138),
-            new Rectangle(153, 7, 163, 136),
-            new Rectangle(315, 7, 154, 137),
-            new Rectangle(473, 6, 151, 138),
-            new Rectangle(633, 11, 153, 132),
-            new Rectangle(793, 10, 151, 133),
-            new Rectangle(952, 6, 146, 138),
-            new Rectangle(1104, 7, 156, 137),
-            new Rectangle(1264, 6, 158, 138),
-            new Rectangle(1424, 6, 153, 138)
+            // Row 1
+            new Rectangle(0, 0, 84, 84),      // Frame 1
+            new Rectangle(84, 0, 84, 84),     // Frame 2
+            new Rectangle(168, 0, 84, 84),    // Frame 3
+            new Rectangle(252, 0, 84, 84),    // Frame 4
+            new Rectangle(336, 0, 84, 84),    // Frame 5
+
+            // Row 2
+            new Rectangle(0, 84, 84, 84),     // Frame 6
+            new Rectangle(84, 84, 84, 84),    // Frame 7
+            new Rectangle(168, 84, 84, 84),   // Frame 8
+            new Rectangle(252, 84, 84, 84),   // Frame 9
+            new Rectangle(336, 84, 84, 84),   // Frame 10
+
+            // Row 3
+            new Rectangle(0, 168, 84, 84),    // Frame 11
+            new Rectangle(84, 168, 84, 84),   // Frame 12
+            new Rectangle(168, 168, 84, 84),  // Frame 13
+            new Rectangle(252, 168, 84, 84),  // Frame 14
+            new Rectangle(336, 168, 84, 84),  // Frame 15
+
+            // Row 4
+            new Rectangle(0, 252, 84, 84),    // Frame 16
+            new Rectangle(84, 252, 84, 84),   // Frame 17
+            new Rectangle(168, 252, 84, 84),  // Frame 18
+            new Rectangle(252, 252, 84, 84),  // Frame 19
+            new Rectangle(336, 252, 84, 84),  // Frame 20
+
+            // Row 5
+            new Rectangle(0, 336, 84, 84),    // Frame 21
+            new Rectangle(84, 336, 84, 84),   // Frame 22
+            new Rectangle(168, 336, 84, 84),  // Frame 23
+            new Rectangle(252, 336, 84, 84),  // Frame 24
+            new Rectangle(336, 336, 84, 84),  // Frame 25
+
+            // Row 6
+            new Rectangle(0, 420, 84, 84),    // Frame 26
+            new Rectangle(84, 420, 84, 84),   // Frame 27
+            new Rectangle(168, 420, 84, 84),  // Frame 28
+            new Rectangle(252, 420, 84, 84),  // Frame 29
+            new Rectangle(336, 420, 84, 84),  // Frame 30
+
+            // Row 7 (2 frames only)
+            new Rectangle(0, 504, 84, 84),    // Frame 31
+            new Rectangle(84, 504, 84, 84)    // Frame 32
     };
+
 
     private int currentFrameIndex = 0;
     private int animationCounter = 0;
     private final int ANIMATION_DELAY = 6;
-    private final double SCALE = 1.3;
+    private final double SCALE = 3;
 
     private Rectangle currentFrame;
 
@@ -37,7 +73,8 @@ public class Boss extends Enemy {
     private int waveCooldown = 0;
     private int waveCount = 0;
     private final int MAX_WAVES = 5;
-    private final int WAVE_INTERVAL = 300; // ~10s at 30fps (30 * 10 = 300)
+    private final int WAVE_INTERVAL = 150; // ~10s at 30fps (30 * 10 = 300)
+    private boolean firstWaveSpawned = false; // Track if first wave has been spawned
 
     private Player player;
 
@@ -67,12 +104,22 @@ public class Boss extends Enemy {
 
         // Handle baby boss waves
         if (waveCount < MAX_WAVES) {
-            waveCooldown++;
-            if (waveCooldown >= WAVE_INTERVAL) {
+            // Spawn first wave immediately
+            if (!firstWaveSpawned) {
                 spawnBabyBosses();
-                waveCooldown = 0;
+                firstWaveSpawned = true;
                 waveCount++;
-                System.out.println("Wave " + waveCount + " spawned! (" + babyBosses.size() + " baby bosses)");
+                waveCooldown = 0; // Reset cooldown for next wave
+                System.out.println("Wave " + waveCount + " spawned immediately! (" + babyBosses.size() + " baby bosses)");
+            } else {
+                // For subsequent waves, wait for the interval
+                waveCooldown++;
+                if (waveCooldown >= WAVE_INTERVAL) {
+                    spawnBabyBosses();
+                    waveCooldown = 0;
+                    waveCount++;
+                    System.out.println("Wave " + waveCount + " spawned after 10s wait! (" + babyBosses.size() + " baby bosses)");
+                }
             }
         }
 
@@ -105,7 +152,7 @@ public class Boss extends Enemy {
         int[] offsetsX = {-3, -2, -1, 0, 1, 2, 3};
         int[] offsetsY = {50, 30, 15, 0, 15, 30, 50}; // U shape - outer ones lower
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 5; i++) {
             int bx = baseX + offsetsX[i] * spacing;
             int by = baseY + offsetsY[i];
 
@@ -170,5 +217,23 @@ public class Boss extends Enemy {
             waveCount++;
             waveCooldown = 0;
         }
+    }
+
+    // Method to get time until next wave (for UI display)
+    public int getTimeUntilNextWave() {
+        if (waveCount >= MAX_WAVES) return 0;
+        if (!firstWaveSpawned) return 0; // First wave spawns immediately
+        return Math.max(0, WAVE_INTERVAL - waveCooldown);
+    }
+
+    // Method to reset boss state (for game restart)
+    public void reset() {
+        babyBosses.clear();
+        waveCount = 0;
+        waveCooldown = 0;
+        firstWaveSpawned = false;
+        currentFrameIndex = 0;
+        animationCounter = 0;
+        currentFrame = bossFrames[0];
     }
 }

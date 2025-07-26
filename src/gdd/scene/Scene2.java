@@ -3,6 +3,7 @@ package gdd.scene;
 import gdd.sprite.Player;
 import gdd.sprite.Boss;
 import gdd.sprite.BabyBoss;
+import gdd.sprite.Shot;
 
 import javax.swing.*;
 import java.awt.*;
@@ -79,6 +80,17 @@ public class Scene2 extends JPanel implements ActionListener {
                 }
             }
 
+            // Draw player shots
+            List<Shot> playerShots = player.getShots();
+            for (Shot shot : playerShots) {
+                if (shot.isVisible()) {
+                    g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
+                }
+            }
+            if (playerShots.size() > 0) {
+                System.out.println("Drawing " + playerShots.size() + " shots");
+            }
+
             // Draw wave information
             drawUI(g);
         } else {
@@ -100,12 +112,22 @@ public class Scene2 extends JPanel implements ActionListener {
         String babyCount = "Baby Bosses: " + boss.getBabyBosses().size();
         g.drawString(babyCount, 10, 45);
 
-        // Time until next wave (approximate)
+        // Time until next wave (more accurate)
         if (boss.getCurrentWave() < boss.getMaxWaves()) {
-            int timeLeft = (300 - (frame % 300)) / 30; // Convert to seconds
-            String nextWave = "Next wave in: " + timeLeft + "s";
-            g.drawString(nextWave, 10, 65);
+            int timeLeft = boss.getTimeUntilNextWave() / 30; // Convert frames to seconds
+            if (boss.getCurrentWave() == 0) {
+                g.drawString("First wave spawning now!", 10, 65);
+            } else {
+                String nextWave = "Next wave in: " + timeLeft + "s";
+                g.drawString(nextWave, 10, 65);
+            }
+        } else {
+            g.drawString("All waves spawned!", 10, 65);
         }
+
+        // Controls information
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        g.drawString("Controls: Arrow Keys = Move, SPACE = Shoot", 10, BOARD_HEIGHT - 20);
     }
 
     private void drawGameOver(Graphics g) {
@@ -142,7 +164,7 @@ public class Scene2 extends JPanel implements ActionListener {
             boss.act();
         }
 
-        // Handle baby boss collisions
+        // Handle baby boss collisions with player
         List<BabyBoss> babies = boss.getBabyBosses();
         for (BabyBoss bb : babies) {
             if (bb.isVisible() && player.isVisible()) {
@@ -156,6 +178,21 @@ public class Scene2 extends JPanel implements ActionListener {
             }
         }
 
+        // Handle shot collisions with baby bosses
+        for (Shot shot : player.getShots()) {
+            if (!shot.isVisible()) continue;
+
+            for (BabyBoss bb : babies) {
+                if (bb.isVisible() && shot.getBounds().intersects(bb.getBounds())) {
+                    // Hit! Remove both shot and baby boss
+                    shot.setVisible(false);
+                    bb.setVisible(false);
+                    System.out.println("Baby boss destroyed by shot!");
+                    break; // Exit inner loop since shot is destroyed
+                }
+            }
+        }
+
         repaint();
     }
 
@@ -163,11 +200,11 @@ public class Scene2 extends JPanel implements ActionListener {
         gameOver = false;
         frame = 0;
 
-        // Reset player
-        player = new Player();
+        // Reset player (using the reset method)
+        player.reset();
 
-        // Reset boss
-        boss = new Boss((BOARD_WIDTH - 150) / 2, 60, player);
+        // Reset boss (using the reset method)
+        boss.reset();
 
         System.out.println("Game restarted!");
     }

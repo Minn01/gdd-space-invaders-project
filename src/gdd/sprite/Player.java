@@ -5,6 +5,9 @@ import static gdd.Global.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import javax.swing.*;
 
 public class Player extends Sprite {
@@ -33,6 +36,11 @@ public class Player extends Sprite {
     private boolean rightPressed = false;
     private boolean upPressed = false;
     private boolean downPressed = false;
+
+    // Shooting
+    private List<Shot> shots = new ArrayList<>();
+    private int shotCooldown = 0;
+    private static final int SHOT_DELAY = 15; // Frames between shots
 
     // Sprites
     private BufferedImage shipSheet;
@@ -109,8 +117,8 @@ public class Player extends Sprite {
         return frame;
     }
 
-
     public void act() {
+        // Handle movement
         x += dx;
         y += dy;
 
@@ -119,53 +127,98 @@ public class Player extends Sprite {
         x = Math.max(0, Math.min(BOARD_WIDTH - width, x));
         y = Math.max(0, Math.min(BOARD_HEIGHT - frameHeight, y));
 
+        // Handle animation
         animationTick++;
         if (animationTick >= ANIMATION_SPEED) {
             boosterFrameToggle = !boosterFrameToggle;
             animationTick = 0;
         }
+
+        // Handle shot cooldown
+        if (shotCooldown > 0) {
+            shotCooldown--;
+        }
+
+        // Update shots
+        updateShots();
     }
 
-
-    public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT -> {
-                dx = -speed;
-                leftPressed = true;
-            }
-            case KeyEvent.VK_RIGHT -> {
-                dx = speed;
-                rightPressed = true;
-            }
-            case KeyEvent.VK_UP -> {
-                dy = -speed;
-                upPressed = true;
-            }
-            case KeyEvent.VK_DOWN -> {
-                dy = speed;
-                downPressed = true;
+    private void updateShots() {
+        Iterator<Shot> iterator = shots.iterator();
+        while (iterator.hasNext()) {
+            Shot shot = iterator.next();
+            shot.act();
+            if (!shot.isVisible()) {
+                iterator.remove();
             }
         }
     }
 
+    public void shoot() {
+        if (shotCooldown <= 0) {
+            // Create shot using your existing Shot class constructor
+            Shot newShot = new Shot(x, y, width);
+            shots.add(newShot);
+            shotCooldown = SHOT_DELAY;
+            System.out.println("Player shot fired! Total shots: " + shots.size());
+        } else {
+            System.out.println("Shot on cooldown: " + shotCooldown);
+        }
+    }
+
+    public List<Shot> getShots() {
+        return shots;
+    }
+
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_LEFT) {
+            dx = -speed;
+            leftPressed = true;
+        }
+
+        if (key == KeyEvent.VK_RIGHT) {
+            dx = speed;
+            rightPressed = true;
+        }
+
+        if (key == KeyEvent.VK_UP) {
+            dy = -speed;
+            upPressed = true;
+        }
+
+        if (key == KeyEvent.VK_DOWN) {
+            dy = speed;
+            downPressed = true;
+        }
+
+        if (key == KeyEvent.VK_SPACE) {
+            shoot();
+        }
+    }
+
     public void keyReleased(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT -> {
-                leftPressed = false;
-                dx = rightPressed ? speed : 0;
-            }
-            case KeyEvent.VK_RIGHT -> {
-                rightPressed = false;
-                dx = leftPressed ? -speed : 0;
-            }
-            case KeyEvent.VK_UP -> {
-                upPressed = false;
-                dy = downPressed ? speed : 0;
-            }
-            case KeyEvent.VK_DOWN -> {
-                downPressed = false;
-                dy = upPressed ? -speed : 0;
-            }
+        int key = e.getKeyCode();
+
+        if (key == KeyEvent.VK_LEFT) {
+            leftPressed = false;
+            dx = rightPressed ? speed : 0;
+        }
+
+        if (key == KeyEvent.VK_RIGHT) {
+            rightPressed = false;
+            dx = leftPressed ? -speed : 0;
+        }
+
+        if (key == KeyEvent.VK_UP) {
+            upPressed = false;
+            dy = downPressed ? speed : 0;
+        }
+
+        if (key == KeyEvent.VK_DOWN) {
+            downPressed = false;
+            dy = upPressed ? -speed : 0;
         }
     }
 
@@ -187,5 +240,20 @@ public class Player extends Sprite {
     public Rectangle getBounds() {
         int frameHeight = height + height / 2; // Match the extended height from getImage()
         return new Rectangle(x, y, width, frameHeight);
+    }
+
+    // Reset method for game restart
+    public void reset() {
+        shots.clear();
+        shotCooldown = 0;
+        setX(START_X);
+        setY(START_Y);
+        dx = 0;
+        dy = 0;
+        leftPressed = false;
+        rightPressed = false;
+        upPressed = false;
+        downPressed = false;
+        setVisible(true);
     }
 }
