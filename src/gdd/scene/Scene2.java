@@ -1,0 +1,232 @@
+package gdd.scene;
+
+import gdd.sprite.Player;
+import gdd.sprite.Boss;
+import gdd.sprite.BabyBoss;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
+
+import static gdd.Global.*;
+
+public class Scene2 extends JPanel implements ActionListener {
+
+    private Player player;
+    private Boss boss;
+    private Timer timer;
+    private int frame = 0;
+    private boolean gameOver = false;
+
+    private final int BLOCKHEIGHT = 50;
+    private final int BLOCKWIDTH = 50;
+
+    public Scene2() {
+        setFocusable(true);
+        setDoubleBuffered(true);
+
+        player = new Player();
+        boss = new Boss((BOARD_WIDTH - 150) / 2, 60, player);  // Centered
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (!gameOver) {
+                    player.keyPressed(e);
+                }
+                // Press R to restart game
+                if (e.getKeyCode() == KeyEvent.VK_R && gameOver) {
+                    restartGame();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (!gameOver) {
+                    player.keyReleased(e);
+                }
+            }
+        });
+
+        timer = new Timer(30, this);
+        timer.start();
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
+
+        if (!gameOver) {
+            drawMap(g);
+
+            // Draw player
+            if (player.isVisible()) {
+                g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+            }
+
+            // Draw boss
+            if (boss.isVisible()) {
+                g.drawImage(boss.getImage(), boss.getX(), boss.getY(), this);
+            }
+
+            // Draw baby bosses
+            for (BabyBoss bb : boss.getBabyBosses()) {
+                if (bb.isVisible()) {
+                    g.drawImage(bb.getImage(), bb.getX(), bb.getY(), this);
+                }
+            }
+
+            // Draw wave information
+            drawUI(g);
+        } else {
+            drawGameOver(g);
+        }
+
+        Toolkit.getDefaultToolkit().sync();
+    }
+
+    private void drawUI(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Wave information
+        String waveInfo = "Wave: " + boss.getCurrentWave() + "/" + boss.getMaxWaves();
+        g.drawString(waveInfo, 10, 25);
+
+        // Baby boss count
+        String babyCount = "Baby Bosses: " + boss.getBabyBosses().size();
+        g.drawString(babyCount, 10, 45);
+
+        // Time until next wave (approximate)
+        if (boss.getCurrentWave() < boss.getMaxWaves()) {
+            int timeLeft = (300 - (frame % 300)) / 30; // Convert to seconds
+            String nextWave = "Next wave in: " + timeLeft + "s";
+            g.drawString(nextWave, 10, 65);
+        }
+    }
+
+    private void drawGameOver(Graphics g) {
+        g.setColor(Color.RED);
+        g.setFont(new Font("Arial", Font.BOLD, 48));
+        String gameOverText = "GAME OVER";
+        FontMetrics fm = g.getFontMetrics();
+        int x = (BOARD_WIDTH - fm.stringWidth(gameOverText)) / 2;
+        int y = BOARD_HEIGHT / 2;
+        g.drawString(gameOverText, x, y);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 24));
+        String restartText = "Press R to Restart";
+        fm = g.getFontMetrics();
+        x = (BOARD_WIDTH - fm.stringWidth(restartText)) / 2;
+        y = y + 60;
+        g.drawString(restartText, x, y);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (gameOver) return;
+
+        frame++;
+
+        // Update player
+        if (player.isVisible()) {
+            player.act();
+        }
+
+        // Update boss
+        if (boss.isVisible()) {
+            boss.act();
+        }
+
+        // Handle baby boss collisions
+        List<BabyBoss> babies = boss.getBabyBosses();
+        for (BabyBoss bb : babies) {
+            if (bb.isVisible() && player.isVisible()) {
+                // Check collision using bounds
+                if (bb.getBounds().intersects(player.getBounds())) {
+                    player.setVisible(false);
+                    gameOver = true;
+                    System.out.println("Player hit by baby boss! Game Over!");
+                    break;
+                }
+            }
+        }
+
+        repaint();
+    }
+
+    private void restartGame() {
+        gameOver = false;
+        frame = 0;
+
+        // Reset player
+        player = new Player();
+
+        // Reset boss
+        boss = new Boss((BOARD_WIDTH - 150) / 2, 60, player);
+
+        System.out.println("Game restarted!");
+    }
+
+    // Add getBounds method to Player class if not present
+    public Rectangle getPlayerBounds() {
+        return new Rectangle(player.getX(), player.getY(), player.getWidth(), player.getHeight());
+    }
+
+    // STARFIELD MAP (unchanged)
+    private final int[][] MAP = {
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+    };
+
+    private void drawMap(Graphics g) {
+        int scrollOffset = frame % BLOCKHEIGHT;
+        int baseRow = frame / BLOCKHEIGHT;
+        int rowsNeeded = (BOARD_HEIGHT / BLOCKHEIGHT) + 2;
+
+        for (int screenRow = 0; screenRow < rowsNeeded; screenRow++) {
+            int mapRow = (baseRow + screenRow) % MAP.length;
+            int y = BOARD_HEIGHT - ((screenRow * BLOCKHEIGHT) - scrollOffset);
+
+            if (y > BOARD_HEIGHT || y < -BLOCKHEIGHT) continue;
+
+            for (int col = 0; col < MAP[mapRow].length; col++) {
+                if (MAP[mapRow][col] == 1) {
+                    int x = col * BLOCKWIDTH;
+                    drawStarCluster(g, x, y, BLOCKWIDTH, BLOCKHEIGHT);
+                }
+            }
+        }
+    }
+
+    private void drawStarCluster(Graphics g, int x, int y, int width, int height) {
+        g.setColor(Color.WHITE);
+        int centerX = x + width / 2;
+        int centerY = y + height / 2;
+        g.fillOval(centerX - 2, centerY - 2, 4, 4);
+
+        g.fillOval(centerX - 15, centerY - 10, 2, 2);
+        g.fillOval(centerX + 12, centerY - 8, 2, 2);
+        g.fillOval(centerX - 8, centerY + 12, 2, 2);
+        g.fillOval(centerX + 10, centerY + 15, 2, 2);
+
+        g.fillOval(centerX - 20, centerY + 5, 1, 1);
+        g.fillOval(centerX + 18, centerY - 15, 1, 1);
+        g.fillOval(centerX - 5, centerY - 18, 1, 1);
+        g.fillOval(centerX + 8, centerY + 20, 1, 1);
+    }
+}

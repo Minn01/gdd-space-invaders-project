@@ -20,8 +20,8 @@ public class Player extends Sprite {
     private int speed = 5;
 
     // Sprite Dimensions
-    private final int width = (int)(FRAME_SIZE * LOCAL_SCALE);
-    private final int height = (int)(FRAME_SIZE * LOCAL_SCALE);
+    private final int width = (int) (FRAME_SIZE * LOCAL_SCALE);
+    private final int height = (int) (FRAME_SIZE * LOCAL_SCALE);
 
     // Booster animation
     private int animationTick = 0;
@@ -99,7 +99,7 @@ public class Player extends Sprite {
         }
 
         int boosterHeight = height / 2;
-        int boosterWidth = (int)(width * 0.4);
+        int boosterWidth = (int) (width * 0.4);
         int boosterX = (width - boosterWidth) / 2;
         int boosterY = height - boosterHeight / 4; // Adjust flame origin lower
         Image scaledBooster = booster.getScaledInstance(boosterWidth, boosterHeight, Image.SCALE_SMOOTH);
@@ -129,10 +129,22 @@ public class Player extends Sprite {
 
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT -> { dx = -speed; leftPressed = true; }
-            case KeyEvent.VK_RIGHT -> { dx = speed; rightPressed = true; }
-            case KeyEvent.VK_UP -> { dy = -speed; upPressed = true; }
-            case KeyEvent.VK_DOWN -> { dy = speed; downPressed = true; }
+            case KeyEvent.VK_LEFT -> {
+                dx = -speed;
+                leftPressed = true;
+            }
+            case KeyEvent.VK_RIGHT -> {
+                dx = speed;
+                rightPressed = true;
+            }
+            case KeyEvent.VK_UP -> {
+                dy = -speed;
+                upPressed = true;
+            }
+            case KeyEvent.VK_DOWN -> {
+                dy = speed;
+                downPressed = true;
+            }
         }
     }
 
@@ -158,7 +170,9 @@ public class Player extends Sprite {
     }
 
     // Optional Getter/Setter for speed if needed
-    public int getSpeed() { return speed; }
+    public int getSpeed() {
+        return speed;
+    }
 
     public int setSpeed(int speed) {
         this.speed = Math.max(1, speed);
@@ -167,5 +181,11 @@ public class Player extends Sprite {
 
     public int getWidth() {
         return width;
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        int frameHeight = height + height / 2; // Match the extended height from getImage()
+        return new Rectangle(x, y, width, frameHeight);
     }
 }
