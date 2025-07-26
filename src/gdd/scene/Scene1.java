@@ -109,9 +109,9 @@ public class Scene1 extends JPanel {
 
     private void initAudio() {
         try {
-            String filePath = "src/audio/scene1.wav";
-            audioPlayer = new AudioPlayer(filePath);
-            audioPlayer.play();
+//            String filePath = "src/audio/scene1.wav";
+            audioPlayer = new AudioPlayer();
+            audioPlayer.playScene2Music();
         } catch (Exception e) {
             System.err.println("Error initializing audio player: " + e.getMessage());
         }
@@ -203,7 +203,7 @@ public class Scene1 extends JPanel {
         timer.stop();
         try {
             if (audioPlayer != null) {
-                audioPlayer.stop();
+                audioPlayer.stopScene2Music();
             }
         } catch (Exception e) {
             System.err.println("Error closing audio player.");
@@ -518,6 +518,7 @@ public class Scene1 extends JPanel {
     }
 
     private void handleShooting() {
+        audioPlayer.playLaser();
         if (player.getBulletStage() == 1) {
             // Single shot - straight up
             shots.add(new Shot(player.getX() + player.getWidth() / 2, player.getY(), 0, -3));
@@ -563,6 +564,11 @@ public class Scene1 extends JPanel {
             if (powerup.isVisible()) {
                 powerup.act();
                 if (powerup.collidesWith(player)) {
+                    if (powerup instanceof Life) {
+                        audioPlayer.playHealthPowerUp();
+                    } else {
+                        audioPlayer.playNormalPowerUp();
+                    }
                     powerup.upgrade(player);
                 }
             }
@@ -623,7 +629,7 @@ public class Scene1 extends JPanel {
 
                         score += 5;
                         explosions.add(new Explosion(enemyX, enemyY));
-
+                        audioPlayer.playExplosion();
                         deaths++;
                         enemy.setDying(true);
                         shot.die();
@@ -706,7 +712,32 @@ public class Scene1 extends JPanel {
                     bomb.setDestroyed(true);
                 }
             }
-        }    }
+        }
+    }
+
+    private void handleCollision(ImageIcon ii) {
+        player.setOnCoolDown(true);
+        if (!player.isShieldActive()) {
+            player.setLives(player.getLives() - 1);
+            audioPlayer.playPlayerHitSound();
+        } else {
+            currentShield.disposeShieldTimer();
+            audioPlayer.playShieldGuardSound();
+        }
+
+        // cool down period for player
+        new Timer(1000, e -> {
+            if (player.isShieldActive()) {
+                player.setShieldActive(false);
+            }
+            player.setOnCoolDown(false);
+        }).start();
+
+        if (player.getLives() == 0) {
+            player.setImage(ii.getImage());
+            player.setDying(true);
+        }
+    }
 
     // Method to trigger a fade message
     private void showFadeMessage(String message) {
@@ -727,6 +758,7 @@ public class Scene1 extends JPanel {
             enemies.clear();
             currentStage = 2;
             showFadeMessage("Your enemies grow stronger...");
+            audioPlayer.playWarpSound();
             stage2MessageShown = true;
         }
 
@@ -735,29 +767,8 @@ public class Scene1 extends JPanel {
             enemies.clear();
             currentStage = 3;
             showFadeMessage("Meet the big boss...");
+            audioPlayer.playWarpSound();
             stage3MessageShown = true;
-        }
-    }
-
-    private void handleCollision(ImageIcon ii) {
-        player.setOnCoolDown(true);
-        if (!player.isShieldActive()) {
-            player.setLives(player.getLives() - 1);
-        } else {
-            currentShield.disposeShieldTimer();
-        }
-
-        // cool down period for player
-        new Timer(1000, e -> {
-            if (player.isShieldActive()) {
-                player.setShieldActive(false);
-            }
-            player.setOnCoolDown(false);
-        }).start();
-
-        if (player.getLives() == 0) {
-            player.setImage(ii.getImage());
-            player.setDying(true);
         }
     }
 

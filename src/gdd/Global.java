@@ -52,4 +52,15 @@ public class Global {
     public static final int FADE_IN_FRAMES = 60;  // 1 second fade in
     public static final int FADE_OUT_FRAMES = 60; // 1 second fade out
     public static final int FADE_HOLD_FRAMES = 60; // 1 second hold at full opacity
+
+    // Audio
+    public static final String TITLE_MUSIC = "src/audio/title.wav";
+    public static final String SCENE2_MUSIC = "src/audio/scene1.wav";
+    public static final String EXPLOSION_SOUND = "src/audio/invaderKilled.wav";
+    public static final String LASER_SOUND = "src/audio/shoot.wav";
+    public static final String HEALTH_POWERUP = "src/audio/health_powerup.wav";
+    public static final String NORMAL_POWERUP = "src/audio/normal_powerup.wav";
+    public static final String WARP_SOUND = "src/audio/warp_sound.wav";
+    public static final String PLAYER_HIT_SOUND = "src/audio/player_hit_sound.wav";
+    public static final String SHIELD_GUARD_SOUND = "src/audio/shield_guard_sound.wav";
 }
