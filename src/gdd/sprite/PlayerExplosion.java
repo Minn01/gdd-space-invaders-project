@@ -30,7 +30,7 @@ public class PlayerExplosion extends Sprite {
         this.x = x;
         this.y = y;
         this.visible = true;
-        sheetIcon = new ImageIcon(IMG_EXPLOSION);
+        sheetIcon = new ImageIcon(IMG_SPACESHIP_EXPLOSION);
     }
 
     @Override

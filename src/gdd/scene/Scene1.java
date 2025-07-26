@@ -273,7 +273,7 @@ public class Scene1 extends JPanel {
         if (player.isDying()) {
 
             player.die();
-            Timer inGameTimer = new Timer(5000, e -> inGame = false);
+            Timer inGameTimer = new Timer(1000, e -> inGame = false);
             inGameTimer.setRepeats(false);
             inGameTimer.start();
         }
